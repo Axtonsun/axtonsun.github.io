@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #fff"
+  lang="en"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  
+  <title>Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems - Axton</title>
+
+  
+  <meta name="theme-color" />
+  
+  <meta name="description" content="文献标题：Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems 发表时间：2020 作者单位：普渡大学 (Purdue University) 文献类型：会议 期刊名称：SIGMOD / Research 28: Stream Processing 数据来源： A new data partitioning scheme Prompt leverages the charcteristics of the micro-batch processing model
+In the batching phase
+a frequency-aware buffering mechanism progressively maintains run-time statistics, and provides on- line key-based sorting as data tuples arrive a workload-aware greedy algorithm
+partitions the buffered data tuples efficiently for the Map stage In the processing phase" />
+  <meta name="author" content="Axton" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="https://axtonsun.github.io/main.min.css" />
+
+  
+  <script
+    defer
+    src="https://axtonsun.github.io/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+  
+  
+  <link
+    rel="preload"
+    as="image"
+    href="https://axtonsun.github.io/theme.png"
+  />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/15446174?s=400&amp;u=d3ade97b9363ffa8594afcb9ee947be2e47a7cb6&amp;v=4" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/twitter.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/github.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/instagram.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/rss.svg" />
+  
+
+  
+  <link rel="icon" href="https://axtonsun.github.io/images/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://axtonsun.github.io/images/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.101.0" />
+
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <meta property="og:title" content="Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems" />
+<meta property="og:description" content="文献标题：Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems 发表时间：2020 作者单位：普渡大学 (Purdue University) 文献类型：会议 期刊名称：SIGMOD / Research 28: Stream Processing 数据来源： A new data partitioning scheme Prompt leverages the charcteristics of the micro-batch processing model
+In the batching phase
+a frequency-aware buffering mechanism progressively maintains run-time statistics, and provides on- line key-based sorting as data tuples arrive a workload-aware greedy algorithm
+partitions the buffered data tuples efficiently for the Map stage In the processing phase" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://axtonsun.github.io/posts/prompt2020/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-09-17T12:36:30+08:00" />
+<meta property="article:modified_time" content="2022-09-17T12:36:30+08:00" />
+
+
+  
+  <meta itemprop="name" content="Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems">
+<meta itemprop="description" content="文献标题：Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems 发表时间：2020 作者单位：普渡大学 (Purdue University) 文献类型：会议 期刊名称：SIGMOD / Research 28: Stream Processing 数据来源： A new data partitioning scheme Prompt leverages the charcteristics of the micro-batch processing model
+In the batching phase
+a frequency-aware buffering mechanism progressively maintains run-time statistics, and provides on- line key-based sorting as data tuples arrive a workload-aware greedy algorithm
+partitions the buffered data tuples efficiently for the Map stage In the processing phase"><meta itemprop="datePublished" content="2022-09-17T12:36:30+08:00" />
+<meta itemprop="dateModified" content="2022-09-17T12:36:30+08:00" />
+<meta itemprop="wordCount" content="201">
+<meta itemprop="keywords" content="Stream Processing," />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems"/>
+<meta name="twitter:description" content="文献标题：Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems 发表时间：2020 作者单位：普渡大学 (Purdue University) 文献类型：会议 期刊名称：SIGMOD / Research 28: Stream Processing 数据来源： A new data partitioning scheme Prompt leverages the charcteristics of the micro-batch processing model
+In the batching phase
+a frequency-aware buffering mechanism progressively maintains run-time statistics, and provides on- line key-based sorting as data tuples arrive a workload-aware greedy algorithm
+partitions the buffered data tuples efficiently for the Map stage In the processing phase"/>
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a class="-translate-x-[1px] -translate-y-0.5 text-3xl font-bold" href="https://axtonsun.github.io"
+      >Axton</a
+    >
+    <a
+      class="btn-dark ml-6 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+    ></a>
+  </div>
+
+  <a
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+  ></a>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#fff"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkVal = localStorage.getItem('dark');
+    setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+    <nav class="lg:ml-12 lg:flex lg:flex-row lg:items-center lg:space-x-6">
+      
+      <a
+        class="block text-center text-2xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/about/"
+        >About</a
+      >
+      
+      <a
+        class="block text-center text-2xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/contact/"
+        >Contact</a
+      >
+      
+    </nav>
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:mt-0 lg:ml-12 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/twitter.svg)"
+        href=" https://twitter.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/github.svg)"
+        href=" https://github.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/instagram.svg)"
+        href=" https://instagram.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/rss.svg)"
+        href=" https://axtonsun.github.io/index.xml "
+        target="_blank"
+      ></a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pt-20 pb-32 dark:prose-invert"
+    >
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Sep 17, 2022</time>
+      
+      
+      <span class="mx-1">&middot;</span>
+      <span>Axton</span>
+      
+    </div>
+    
+  </header>
+
+  <section><ul>
+<li>文献标题：Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems</li>
+<li>发表时间：2020</li>
+<li>作者单位：普渡大学 (Purdue University)</li>
+<li>文献类型：会议</li>
+<li>期刊名称：SIGMOD / Research 28: Stream Processing</li>
+<li>数据来源：</li>
+</ul>
+<p>A new data partitioning scheme <em><strong>Prompt</strong></em> leverages the charcteristics of the micro-batch processing model</p>
+<ul>
+<li>
+<p>In the batching phase</p>
+<ul>
+<li>a frequency-aware buffering mechanism</li>
+<li>progressively maintains run-time statistics, and provides on- line key-based sorting as data tuples arrive</li>
+</ul>
+</li>
+<li>
+<p>a workload-aware greedy algorithm</p>
+<ul>
+<li>partitions the buffered data tuples efficiently for the Map stage</li>
+</ul>
+</li>
+<li>
+<p>In the processing phase</p>
+<ul>
+<li>a load-aware distribution mechanism
+<ul>
+<li>balances the size of the input to the Reduce stage without incurring inter-task communication overhead.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>two metrics</p>
+<ul>
+<li>Block Size Imbalance - BSI</li>
+<li>Block Cardinality Imbalance - BCI.</li>
+</ul>
+</li>
+<li>
+<p>two datasets</p>
+<ul>
+<li>Tweets</li>
+<li>TPC-H</li>
+</ul>
+</li>
+<li>
+<p>compare with existing and state-of-the-art techniques</p>
+<ul>
+<li>Shuffle</li>
+<li>Hashing</li>
+<li>PK-2
+<ul>
+<li>M. A. U. Nasir, G. D. F. Morales, D. G. Soriano, N. Kourtellis, and M. Serafini. The power of both choices: Practical load balancing for distributed stream processing engines. In ICDE, 2015.</li>
+</ul>
+</li>
+<li>PK-5
+<ul>
+<li>M. A. U. Nasir, G. D. F. Morales, N. Kourtellis, and M. Serafini. When two choices are not enough: Balancing at scale in distributed stream processing. In ICDE, 2016.</li>
+</ul>
+</li>
+<li>cAM
+<ul>
+<li>N. R. Katsipoulakis, A. Labrinidis, and P. K. Chrysanthis. A holistic view of stream partitioning costs. In VLDB, 2017.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</section>
+
+  
+  
+  <footer class="mt-12 flex flex-wrap">
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/stream-processing"
+      >Stream Processing</a
+    >
+    
+  </footer>
+  
+
+  
+  
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60">
+  <div class="mr-auto">
+    &copy; 2022
+    <a class="link" href="https://axtonsun.github.io">Axton</a>
+  </div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank">Powered by Hugo️️</a
+  >️
+  <a class="link" href="https://github.com/nanxiaobei/hugo-paper" rel="noopener" target="_blank"
+    >▷ Paper 6</a
+  >
+</footer>
+
+  </body>
+</html>
