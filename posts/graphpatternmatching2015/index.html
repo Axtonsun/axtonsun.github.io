@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #fff"
+  lang="en"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  
+  <title>大规模图数据匹配技术综述 - Axton</title>
+
+  
+  <meta name="theme-color" />
+  
+  <meta name="description" content="图作为一种广泛应用的数据结构，非常适合刻画这种具有内在关联性的数据，许多领域的问题都可以通过图的相关理论和技术解决，例如社交网络与Web网络分析、推荐系统、社会安全分析、生物数据分析等。
+图模式匹配技术(graph pattern matching)作为实现图数据上高效查询的重要手段，广泛应用于上述各领域的实际问题中。
+面对海量关联数据带来的新挑战，各大公司纷纷提出了图数据处理的并行计算模型和系统，包括谷歌公司的大规模图数据处理系统Pregel1、微软研究院的大规模分布式图数据查询(querying large distributed graphs)系统2以及CMU Select实验室研发的GraphLab系统3，这些系统采用分布式计算等技术支持大规模图数据上的高效匹配、查询等算法。
+对千万级甚至更大规模的图数据进行高效、准确的匹配查询仍然面临一些问题：
+匹配问题复杂 子图同构(subgraph isomorphism)问题属于NP-Complete问题4 措施 设计更高效的搜索算法 采用近似算法 数据规模巨大 采用数据挖掘等技术提取图中的路径、树、子图作为索引特征 数据更新频繁 引入增量处理技术 在所有图匹配问题中，子图同构(subgraph isomorphism)是需要解决的基本问题。
+1.图匹配问题 基本的图匹配问题与定义 定义三元组\((V,E,L)\)表示一个图，其中\(V\)表示图中节点的集合，$E$表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边喝节点可以带有属性信息，\(L\)表示属性 映射函数，将节点或边映射到一个或一组属性上。 一个数据图与模式图的精确匹配问题称为子图同构，需要在数据图中搜索出与模式图在结构和节点与边属性上完全匹配的子图。
+精确图匹配问题需要在数据图中找到所有满足上述条件的子图作为模式图的匹配结果。
+扩展的图匹配问题 结构匹配和语义匹配
+图匹配问题按图数据是否在节点和边上包含语义信息分为语义匹配和结构匹配。
+图匹配的许多前期研究基于严格的图结构相似性，即保证所匹配的节点周围具有相同的连通结构，这种匹配问题称为结构匹配，主要应用于化学物质相似结构的检测。
+结构匹配的代表性算法包括1976年最早提出的Ullmann算法5以及近年来在该算法基础上改进的VF26，QuickSI7，GraphQL8，Spath9等算法。
+在匹配这类图数据时，需要同时保证匹配结果在结构和语义信息上与模式图一致，这种匹配问题称为语义匹配。如典型的GraphGrep10算法。
+精确匹配和近似匹配
+图匹配问题按匹配结果是否要求与模式图完全一致分为精确匹配和近似匹配。
+精确匹配指匹配的结果和模式图的结构及属性完全一致，这种匹配方式主要应用于对匹配结果的准确率要求较高的领域，包括生物数据分析、社会安全分析等，前面介绍的结构匹配算法和语义匹配算法都属于典型的精确匹配技术。
+近似匹配是一种可以容忍结果中存在一定噪声和错误的匹配算法，代表性的近似匹配算法包括SUBDUE11，LAW12等，主要通过定义编辑距离、最大公共子图(minium common subgraph)、最小公共超图(minimum common supergraph)等方法衡量两个图的相似程度。
+静态图匹配和动态图匹配
+图匹配问题按数据图是否更新分为动态图匹配和静态图匹配。
+静态图匹配要求所有的数据图不随着时间推移而变化，GIndex13是最有代表性的静态图匹配算法，后续还有FG-Index14，Tree&#43;delta15等算法。
+动态图匹配能够在图数据更新时满足实时匹配的性能需求。主要采用增量处理技术，仅对更新的数据图进行分析，代表性工作包括文献161718。
+最优算法和近似算法
+图匹配算法按是否能获得准确结果分为最优算法和近似算法
+最优算法保证匹配结果完全精确，例如精确匹配问题的最优算法可以保证计算结果与模式图完全同构，近似匹配问题的最优算法获得与模式图最近似的一系列匹配结果。
+近似算法不同于近似匹配，近似算法通常基于概率统计等数学模型，非常适合动态图匹配等对算法实时性要求较高且只需满足一定准确率的匹配问题。
+2.精确图匹配技术 Exact Graph Pattern Matching Non-index-based Matching Ullmann(1976) VF2(2001) GraphQL(2008) GADDI(2009) Spath(2010) Index-based Matching Non-mining-based Matching GraphGrep(2002) CTree(2006) GCoding(2008) Mining-based Matching GIndex(2004) FG-Index(2007) Tree-Delta(2007) 无索引的匹配技术 精确图匹配是一种NP完全问题，算法设计时利用图中的结构和语义信息可以有效提高图匹配的性能。" />
+  <meta name="author" content="Axton" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="https://axtonsun.github.io/main.min.css" />
+
+  
+  <script
+    defer
+    src="https://axtonsun.github.io/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+  
+  
+  <link
+    rel="preload"
+    as="image"
+    href="https://axtonsun.github.io/theme.png"
+  />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/15446174?s=400&amp;u=d3ade97b9363ffa8594afcb9ee947be2e47a7cb6&amp;v=4" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/twitter.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/github.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/instagram.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/rss.svg" />
+  
+
+  
+  <link rel="icon" href="https://axtonsun.github.io/images/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://axtonsun.github.io/images/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.101.0" />
+
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <meta property="og:title" content="大规模图数据匹配技术综述" />
+<meta property="og:description" content="图作为一种广泛应用的数据结构，非常适合刻画这种具有内在关联性的数据，许多领域的问题都可以通过图的相关理论和技术解决，例如社交网络与Web网络分析、推荐系统、社会安全分析、生物数据分析等。
+图模式匹配技术(graph pattern matching)作为实现图数据上高效查询的重要手段，广泛应用于上述各领域的实际问题中。
+面对海量关联数据带来的新挑战，各大公司纷纷提出了图数据处理的并行计算模型和系统，包括谷歌公司的大规模图数据处理系统Pregel1、微软研究院的大规模分布式图数据查询(querying large distributed graphs)系统2以及CMU Select实验室研发的GraphLab系统3，这些系统采用分布式计算等技术支持大规模图数据上的高效匹配、查询等算法。
+对千万级甚至更大规模的图数据进行高效、准确的匹配查询仍然面临一些问题：
+匹配问题复杂 子图同构(subgraph isomorphism)问题属于NP-Complete问题4 措施 设计更高效的搜索算法 采用近似算法 数据规模巨大 采用数据挖掘等技术提取图中的路径、树、子图作为索引特征 数据更新频繁 引入增量处理技术 在所有图匹配问题中，子图同构(subgraph isomorphism)是需要解决的基本问题。
+1.图匹配问题 基本的图匹配问题与定义 定义三元组\((V,E,L)\)表示一个图，其中\(V\)表示图中节点的集合，$E$表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边喝节点可以带有属性信息，\(L\)表示属性 映射函数，将节点或边映射到一个或一组属性上。 一个数据图与模式图的精确匹配问题称为子图同构，需要在数据图中搜索出与模式图在结构和节点与边属性上完全匹配的子图。
+精确图匹配问题需要在数据图中找到所有满足上述条件的子图作为模式图的匹配结果。
+扩展的图匹配问题 结构匹配和语义匹配
+图匹配问题按图数据是否在节点和边上包含语义信息分为语义匹配和结构匹配。
+图匹配的许多前期研究基于严格的图结构相似性，即保证所匹配的节点周围具有相同的连通结构，这种匹配问题称为结构匹配，主要应用于化学物质相似结构的检测。
+结构匹配的代表性算法包括1976年最早提出的Ullmann算法5以及近年来在该算法基础上改进的VF26，QuickSI7，GraphQL8，Spath9等算法。
+在匹配这类图数据时，需要同时保证匹配结果在结构和语义信息上与模式图一致，这种匹配问题称为语义匹配。如典型的GraphGrep10算法。
+精确匹配和近似匹配
+图匹配问题按匹配结果是否要求与模式图完全一致分为精确匹配和近似匹配。
+精确匹配指匹配的结果和模式图的结构及属性完全一致，这种匹配方式主要应用于对匹配结果的准确率要求较高的领域，包括生物数据分析、社会安全分析等，前面介绍的结构匹配算法和语义匹配算法都属于典型的精确匹配技术。
+近似匹配是一种可以容忍结果中存在一定噪声和错误的匹配算法，代表性的近似匹配算法包括SUBDUE11，LAW12等，主要通过定义编辑距离、最大公共子图(minium common subgraph)、最小公共超图(minimum common supergraph)等方法衡量两个图的相似程度。
+静态图匹配和动态图匹配
+图匹配问题按数据图是否更新分为动态图匹配和静态图匹配。
+静态图匹配要求所有的数据图不随着时间推移而变化，GIndex13是最有代表性的静态图匹配算法，后续还有FG-Index14，Tree&#43;delta15等算法。
+动态图匹配能够在图数据更新时满足实时匹配的性能需求。主要采用增量处理技术，仅对更新的数据图进行分析，代表性工作包括文献161718。
+最优算法和近似算法
+图匹配算法按是否能获得准确结果分为最优算法和近似算法
+最优算法保证匹配结果完全精确，例如精确匹配问题的最优算法可以保证计算结果与模式图完全同构，近似匹配问题的最优算法获得与模式图最近似的一系列匹配结果。
+近似算法不同于近似匹配，近似算法通常基于概率统计等数学模型，非常适合动态图匹配等对算法实时性要求较高且只需满足一定准确率的匹配问题。
+2.精确图匹配技术 Exact Graph Pattern Matching Non-index-based Matching Ullmann(1976) VF2(2001) GraphQL(2008) GADDI(2009) Spath(2010) Index-based Matching Non-mining-based Matching GraphGrep(2002) CTree(2006) GCoding(2008) Mining-based Matching GIndex(2004) FG-Index(2007) Tree-Delta(2007) 无索引的匹配技术 精确图匹配是一种NP完全问题，算法设计时利用图中的结构和语义信息可以有效提高图匹配的性能。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://axtonsun.github.io/posts/graphpatternmatching2015/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-12-05T23:04:15+08:00" />
+<meta property="article:modified_time" content="2022-12-05T23:04:15+08:00" />
+
+
+  
+  <meta itemprop="name" content="大规模图数据匹配技术综述">
+<meta itemprop="description" content="图作为一种广泛应用的数据结构，非常适合刻画这种具有内在关联性的数据，许多领域的问题都可以通过图的相关理论和技术解决，例如社交网络与Web网络分析、推荐系统、社会安全分析、生物数据分析等。
+图模式匹配技术(graph pattern matching)作为实现图数据上高效查询的重要手段，广泛应用于上述各领域的实际问题中。
+面对海量关联数据带来的新挑战，各大公司纷纷提出了图数据处理的并行计算模型和系统，包括谷歌公司的大规模图数据处理系统Pregel1、微软研究院的大规模分布式图数据查询(querying large distributed graphs)系统2以及CMU Select实验室研发的GraphLab系统3，这些系统采用分布式计算等技术支持大规模图数据上的高效匹配、查询等算法。
+对千万级甚至更大规模的图数据进行高效、准确的匹配查询仍然面临一些问题：
+匹配问题复杂 子图同构(subgraph isomorphism)问题属于NP-Complete问题4 措施 设计更高效的搜索算法 采用近似算法 数据规模巨大 采用数据挖掘等技术提取图中的路径、树、子图作为索引特征 数据更新频繁 引入增量处理技术 在所有图匹配问题中，子图同构(subgraph isomorphism)是需要解决的基本问题。
+1.图匹配问题 基本的图匹配问题与定义 定义三元组\((V,E,L)\)表示一个图，其中\(V\)表示图中节点的集合，$E$表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边喝节点可以带有属性信息，\(L\)表示属性 映射函数，将节点或边映射到一个或一组属性上。 一个数据图与模式图的精确匹配问题称为子图同构，需要在数据图中搜索出与模式图在结构和节点与边属性上完全匹配的子图。
+精确图匹配问题需要在数据图中找到所有满足上述条件的子图作为模式图的匹配结果。
+扩展的图匹配问题 结构匹配和语义匹配
+图匹配问题按图数据是否在节点和边上包含语义信息分为语义匹配和结构匹配。
+图匹配的许多前期研究基于严格的图结构相似性，即保证所匹配的节点周围具有相同的连通结构，这种匹配问题称为结构匹配，主要应用于化学物质相似结构的检测。
+结构匹配的代表性算法包括1976年最早提出的Ullmann算法5以及近年来在该算法基础上改进的VF26，QuickSI7，GraphQL8，Spath9等算法。
+在匹配这类图数据时，需要同时保证匹配结果在结构和语义信息上与模式图一致，这种匹配问题称为语义匹配。如典型的GraphGrep10算法。
+精确匹配和近似匹配
+图匹配问题按匹配结果是否要求与模式图完全一致分为精确匹配和近似匹配。
+精确匹配指匹配的结果和模式图的结构及属性完全一致，这种匹配方式主要应用于对匹配结果的准确率要求较高的领域，包括生物数据分析、社会安全分析等，前面介绍的结构匹配算法和语义匹配算法都属于典型的精确匹配技术。
+近似匹配是一种可以容忍结果中存在一定噪声和错误的匹配算法，代表性的近似匹配算法包括SUBDUE11，LAW12等，主要通过定义编辑距离、最大公共子图(minium common subgraph)、最小公共超图(minimum common supergraph)等方法衡量两个图的相似程度。
+静态图匹配和动态图匹配
+图匹配问题按数据图是否更新分为动态图匹配和静态图匹配。
+静态图匹配要求所有的数据图不随着时间推移而变化，GIndex13是最有代表性的静态图匹配算法，后续还有FG-Index14，Tree&#43;delta15等算法。
+动态图匹配能够在图数据更新时满足实时匹配的性能需求。主要采用增量处理技术，仅对更新的数据图进行分析，代表性工作包括文献161718。
+最优算法和近似算法
+图匹配算法按是否能获得准确结果分为最优算法和近似算法
+最优算法保证匹配结果完全精确，例如精确匹配问题的最优算法可以保证计算结果与模式图完全同构，近似匹配问题的最优算法获得与模式图最近似的一系列匹配结果。
+近似算法不同于近似匹配，近似算法通常基于概率统计等数学模型，非常适合动态图匹配等对算法实时性要求较高且只需满足一定准确率的匹配问题。
+2.精确图匹配技术 Exact Graph Pattern Matching Non-index-based Matching Ullmann(1976) VF2(2001) GraphQL(2008) GADDI(2009) Spath(2010) Index-based Matching Non-mining-based Matching GraphGrep(2002) CTree(2006) GCoding(2008) Mining-based Matching GIndex(2004) FG-Index(2007) Tree-Delta(2007) 无索引的匹配技术 精确图匹配是一种NP完全问题，算法设计时利用图中的结构和语义信息可以有效提高图匹配的性能。"><meta itemprop="datePublished" content="2022-12-05T23:04:15+08:00" />
+<meta itemprop="dateModified" content="2022-12-05T23:04:15+08:00" />
+<meta itemprop="wordCount" content="514">
+<meta itemprop="keywords" content="Graph Pattern  Matching,subgraph isomorphism,综述," />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="大规模图数据匹配技术综述"/>
+<meta name="twitter:description" content="图作为一种广泛应用的数据结构，非常适合刻画这种具有内在关联性的数据，许多领域的问题都可以通过图的相关理论和技术解决，例如社交网络与Web网络分析、推荐系统、社会安全分析、生物数据分析等。
+图模式匹配技术(graph pattern matching)作为实现图数据上高效查询的重要手段，广泛应用于上述各领域的实际问题中。
+面对海量关联数据带来的新挑战，各大公司纷纷提出了图数据处理的并行计算模型和系统，包括谷歌公司的大规模图数据处理系统Pregel1、微软研究院的大规模分布式图数据查询(querying large distributed graphs)系统2以及CMU Select实验室研发的GraphLab系统3，这些系统采用分布式计算等技术支持大规模图数据上的高效匹配、查询等算法。
+对千万级甚至更大规模的图数据进行高效、准确的匹配查询仍然面临一些问题：
+匹配问题复杂 子图同构(subgraph isomorphism)问题属于NP-Complete问题4 措施 设计更高效的搜索算法 采用近似算法 数据规模巨大 采用数据挖掘等技术提取图中的路径、树、子图作为索引特征 数据更新频繁 引入增量处理技术 在所有图匹配问题中，子图同构(subgraph isomorphism)是需要解决的基本问题。
+1.图匹配问题 基本的图匹配问题与定义 定义三元组\((V,E,L)\)表示一个图，其中\(V\)表示图中节点的集合，$E$表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边喝节点可以带有属性信息，\(L\)表示属性 映射函数，将节点或边映射到一个或一组属性上。 一个数据图与模式图的精确匹配问题称为子图同构，需要在数据图中搜索出与模式图在结构和节点与边属性上完全匹配的子图。
+精确图匹配问题需要在数据图中找到所有满足上述条件的子图作为模式图的匹配结果。
+扩展的图匹配问题 结构匹配和语义匹配
+图匹配问题按图数据是否在节点和边上包含语义信息分为语义匹配和结构匹配。
+图匹配的许多前期研究基于严格的图结构相似性，即保证所匹配的节点周围具有相同的连通结构，这种匹配问题称为结构匹配，主要应用于化学物质相似结构的检测。
+结构匹配的代表性算法包括1976年最早提出的Ullmann算法5以及近年来在该算法基础上改进的VF26，QuickSI7，GraphQL8，Spath9等算法。
+在匹配这类图数据时，需要同时保证匹配结果在结构和语义信息上与模式图一致，这种匹配问题称为语义匹配。如典型的GraphGrep10算法。
+精确匹配和近似匹配
+图匹配问题按匹配结果是否要求与模式图完全一致分为精确匹配和近似匹配。
+精确匹配指匹配的结果和模式图的结构及属性完全一致，这种匹配方式主要应用于对匹配结果的准确率要求较高的领域，包括生物数据分析、社会安全分析等，前面介绍的结构匹配算法和语义匹配算法都属于典型的精确匹配技术。
+近似匹配是一种可以容忍结果中存在一定噪声和错误的匹配算法，代表性的近似匹配算法包括SUBDUE11，LAW12等，主要通过定义编辑距离、最大公共子图(minium common subgraph)、最小公共超图(minimum common supergraph)等方法衡量两个图的相似程度。
+静态图匹配和动态图匹配
+图匹配问题按数据图是否更新分为动态图匹配和静态图匹配。
+静态图匹配要求所有的数据图不随着时间推移而变化，GIndex13是最有代表性的静态图匹配算法，后续还有FG-Index14，Tree&#43;delta15等算法。
+动态图匹配能够在图数据更新时满足实时匹配的性能需求。主要采用增量处理技术，仅对更新的数据图进行分析，代表性工作包括文献161718。
+最优算法和近似算法
+图匹配算法按是否能获得准确结果分为最优算法和近似算法
+最优算法保证匹配结果完全精确，例如精确匹配问题的最优算法可以保证计算结果与模式图完全同构，近似匹配问题的最优算法获得与模式图最近似的一系列匹配结果。
+近似算法不同于近似匹配，近似算法通常基于概率统计等数学模型，非常适合动态图匹配等对算法实时性要求较高且只需满足一定准确率的匹配问题。
+2.精确图匹配技术 Exact Graph Pattern Matching Non-index-based Matching Ullmann(1976) VF2(2001) GraphQL(2008) GADDI(2009) Spath(2010) Index-based Matching Non-mining-based Matching GraphGrep(2002) CTree(2006) GCoding(2008) Mining-based Matching GIndex(2004) FG-Index(2007) Tree-Delta(2007) 无索引的匹配技术 精确图匹配是一种NP完全问题，算法设计时利用图中的结构和语义信息可以有效提高图匹配的性能。"/>
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a class="-translate-x-[1px] -translate-y-0.5 text-3xl font-bold" href="https://axtonsun.github.io"
+      >Axton</a
+    >
+    <a
+      class="btn-dark ml-6 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+    ></a>
+  </div>
+
+  <a
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+  ></a>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#fff"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkVal = localStorage.getItem('dark');
+    setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+    <nav class="lg:ml-12 lg:flex lg:flex-row lg:items-center lg:space-x-6">
+      
+      <a
+        class="block text-center text-2xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/about/"
+        >About</a
+      >
+      
+      <a
+        class="block text-center text-2xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/contact/"
+        >Contact</a
+      >
+      
+    </nav>
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:mt-0 lg:ml-12 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/twitter.svg)"
+        href=" https://twitter.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/github.svg)"
+        href=" https://github.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/instagram.svg)"
+        href=" https://instagram.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/rss.svg)"
+        href=" https://axtonsun.github.io/index.xml "
+        target="_blank"
+      ></a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pt-20 pb-32 dark:prose-invert"
+    >
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">大规模图数据匹配技术综述</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Dec 5, 2022</time>
+      
+      
+      <span class="mx-1">&middot;</span>
+      <span>Axton</span>
+      
+    </div>
+    
+  </header>
+
+  <section><p>图作为一种广泛应用的数据结构，非常适合刻画这种具有内在关联性的数据，许多领域的问题都可以通过图的相关理论和技术解决，例如社交网络与Web网络分析、推荐系统、社会安全分析、生物数据分析等。</p>
+<p>图模式匹配技术(graph pattern matching)作为实现图数据上高效查询的重要手段，广泛应用于上述各领域的实际问题中。</p>
+<p>面对海量关联数据带来的新挑战，各大公司纷纷提出了图数据处理的并行计算模型和系统，包括谷歌公司的大规模图数据处理系统Pregel<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>、微软研究院的大规模分布式图数据查询(querying large distributed graphs)系统<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>以及CMU Select实验室研发的GraphLab系统<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>，这些系统采用分布式计算等技术支持大规模图数据上的高效匹配、查询等算法。</p>
+<p>对千万级甚至更大规模的图数据进行高效、准确的匹配查询仍然面临一些问题：</p>
+<ul>
+<li>匹配问题复杂
+<ul>
+<li>子图同构(subgraph isomorphism)问题属于NP-Complete问题<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup></li>
+<li>措施
+<ul>
+<li>设计更高效的搜索算法</li>
+<li>采用近似算法</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>数据规模巨大
+<ul>
+<li>采用数据挖掘等技术提取图中的路径、树、子图作为索引特征</li>
+</ul>
+</li>
+<li>数据更新频繁
+<ul>
+<li>引入增量处理技术</li>
+</ul>
+</li>
+</ul>
+<p>在所有图匹配问题中，子图同构(subgraph isomorphism)是需要解决的基本问题。</p>
+<h2 id="1图匹配问题">1.图匹配问题</h2>
+<h4 id="基本的图匹配问题与定义">基本的图匹配问题与定义</h4>
+
+
+<!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+
+
+
+
+定义三元组\((V,E,L)\)表示一个图，其中\(V\)表示图中节点的集合，$E$表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边喝节点可以带有属性信息，\(L\)表示属性 映射函数，将节点或边映射到一个或一组属性上。
+
+
+<p>一个数据图与模式图的精确匹配问题称为子图同构，需要在数据图中搜索出与模式图在结构和节点与边属性上完全匹配的子图。</p>
+<p>精确图匹配问题需要在数据图中找到所有满足上述条件的子图作为模式图的匹配结果。</p>
+<h3 id="扩展的图匹配问题">扩展的图匹配问题</h3>
+<p><strong>结构匹配和语义匹配</strong></p>
+<p>图匹配问题按图数据是否在节点和边上包含语义信息分为语义匹配和结构匹配。</p>
+<p>图匹配的许多前期研究基于严格的图结构相似性，即保证所匹配的节点周围具有相同的连通结构，这种匹配问题称为<strong>结构匹配</strong>，主要应用于化学物质相似结构的检测。</p>
+<p>结构匹配的代表性算法包括1976年最早提出的Ullmann算法<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup>以及近年来在该算法基础上改进的VF2<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup>，QuickSI<sup id="fnref:7"><a href="#fn:7" class="footnote-ref" role="doc-noteref">7</a></sup>，GraphQL<sup id="fnref:8"><a href="#fn:8" class="footnote-ref" role="doc-noteref">8</a></sup>，Spath<sup id="fnref:9"><a href="#fn:9" class="footnote-ref" role="doc-noteref">9</a></sup>等算法。</p>
+<p>在匹配这类图数据时，需要同时保证匹配结果在结构和语义信息上与模式图一致，这种匹配问题称为<strong>语义匹配</strong>。如典型的GraphGrep<sup id="fnref:10"><a href="#fn:10" class="footnote-ref" role="doc-noteref">10</a></sup>算法。</p>
+<p><strong>精确匹配和近似匹配</strong></p>
+<p>图匹配问题按匹配结果是否要求与模式图完全一致分为精确匹配和近似匹配。</p>
+<p>精确匹配指匹配的结果和模式图的结构及属性完全一致，这种匹配方式主要应用于对匹配结果的准确率要求较高的领域，包括生物数据分析、社会安全分析等，前面介绍的结构匹配算法和语义匹配算法都属于典型的精确匹配技术。</p>
+<p>近似匹配是一种可以容忍结果中存在一定噪声和错误的匹配算法，代表性的近似匹配算法包括SUBDUE<sup id="fnref:11"><a href="#fn:11" class="footnote-ref" role="doc-noteref">11</a></sup>，LAW<sup id="fnref:12"><a href="#fn:12" class="footnote-ref" role="doc-noteref">12</a></sup>等，主要通过定义编辑距离、最大公共子图(minium common subgraph)、最小公共超图(minimum common supergraph)等方法衡量两个图的相似程度。</p>
+<p><strong>静态图匹配和动态图匹配</strong></p>
+<p>图匹配问题按数据图是否更新分为动态图匹配和静态图匹配。</p>
+<p>静态图匹配要求所有的数据图不随着时间推移而变化，GIndex<sup id="fnref:13"><a href="#fn:13" class="footnote-ref" role="doc-noteref">13</a></sup>是最有代表性的静态图匹配算法，后续还有FG-Index<sup id="fnref:14"><a href="#fn:14" class="footnote-ref" role="doc-noteref">14</a></sup>，Tree+delta<sup id="fnref:15"><a href="#fn:15" class="footnote-ref" role="doc-noteref">15</a></sup>等算法。</p>
+<p>动态图匹配能够在图数据更新时满足实时匹配的性能需求。主要采用增量处理技术，仅对更新的数据图进行分析，代表性工作包括文献<sup id="fnref:16"><a href="#fn:16" class="footnote-ref" role="doc-noteref">16</a></sup><sup id="fnref:17"><a href="#fn:17" class="footnote-ref" role="doc-noteref">17</a></sup><sup id="fnref:18"><a href="#fn:18" class="footnote-ref" role="doc-noteref">18</a></sup>。</p>
+<p><strong>最优算法和近似算法</strong></p>
+<p>图匹配算法按是否能获得准确结果分为最优算法和近似算法</p>
+<p>最优算法保证匹配结果完全精确，例如精确匹配问题的最优算法可以保证计算结果与模式图完全同构，近似匹配问题的最优算法获得与模式图最近似的一系列匹配结果。</p>
+<p>近似算法不同于近似匹配，近似算法通常基于概率统计等数学模型，非常适合动态图匹配等对算法实时性要求较高且只需满足一定准确率的匹配问题。</p>
+<h2 id="2精确图匹配技术">2.精确图匹配技术</h2>
+<ul>
+<li>Exact Graph Pattern Matching
+<ul>
+<li>Non-index-based Matching
+<ul>
+<li>Ullmann(1976)</li>
+<li>VF2(2001)</li>
+<li>GraphQL(2008)</li>
+<li>GADDI(2009)</li>
+<li>Spath(2010)</li>
+</ul>
+</li>
+<li>Index-based Matching
+<ul>
+<li>Non-mining-based Matching
+<ul>
+<li>GraphGrep(2002)</li>
+<li>CTree(2006)</li>
+<li>GCoding(2008)</li>
+</ul>
+</li>
+<li>Mining-based Matching
+<ul>
+<li>GIndex(2004)</li>
+<li>FG-Index(2007)</li>
+<li>Tree-Delta(2007)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="无索引的匹配技术">无索引的匹配技术</h3>
+<p>精确图匹配是一种NP完全问题，算法设计时利用图中的结构和语义信息可以有效提高图匹配的性能。</p>
+<p>无索引的匹配技术主要采用搜索策略，适合小规模数据图的精确匹配。</p>
+
+
+Ullmann算法是已知最早的无索引匹配方法，采用深度优先搜索策略，在数据图\(G\)中枚举出与模式图\(P\)中节点一一匹配的子图。
+
+
+<p>Ullmann算法和VF2算法(适合语义匹配)仅利用了待匹配节点与邻接节点的结构和语义约束缩小匹配范围，适合小规模的图匹配问题</p>
+<p>GraphQL，GADDI，Spath等算法从不同角度加强了对备选节点的约束条件，从而有效减少了搜索过程中的回溯次数。</p>
+<h3 id="基于索引的匹配技术">基于索引的匹配技术</h3>
+<p>基于索引的匹配技术通过预先选择数据图中有效的特征建立倒排索引，使得模式匹配时可以根据索引快速缩小搜索空间，再对小规模的备选图进行精确匹配，达到加速匹配的目的。适合大规模图匹配问题。</p>
+<p>基于索引的图匹配技术的基本思想主要包括以下两个方面</p>
+<ul>
+<li>索引建立。匹配前首先提取数据图中的特征，根据特征建立数据图的倒排索引</li>
+<li>模式匹配。在建立索引后，已知待匹配的模式图P，匹配过程包括两部分
+<ul>
+<li>筛选备选图</li>
+<li>精确匹配</li>
+</ul>
+</li>
+</ul>
+<p><strong>非数据挖掘的索引技术</strong></p>
+<p>非数据挖掘的索引算法在建立索引的过程中利用路径、节点信息或节点周围结构作为索引特征，不需要对数据图进行数据挖掘等复杂操作。</p>
+<p>非数据挖掘的索引技术的主要优势在于采用简单的路径、树以及其他简单的结构对图数据中每个节点进行编码描述，从而快速建立索引。当图数据动态变化时能够高效地对索引进行调整，非常适合动态图数据对匹配的实时性需求。</p>
+<p><strong>基于数据挖掘的索引技术</strong></p>
+<p>针对非数据挖掘的索引技术忽略了图数据结构信息的问题，典型的改进方法是采用图的子图结构代替以节点为中心的路径、树以及其他简单结构作为索引特征。然而子图结构的数量会远远超过简单结构的数量，导致索引规模呈指数增长，无法应用于实际大规模的图匹配问题。因此，需要在所有子图结构中挖掘具有较强辨别力的子图作为特征，从而缩小索引规模。</p>
+<p>通过数据挖掘技术可以选择具有较强辨别力的索引特征，在很大程度上降低了索引规模，但随着待处理数据规模的不断增长，所生成的大规模索引将无法直接存储在内存中，需要使用外存储器来存储。</p>
+<h2 id="3图数据模式匹配算法和性能评价">3.图数据模式匹配算法和性能评价</h2>
+<h3 id="具有代表性的数据集">具有代表性的数据集</h3>
+<p>评测数据集包括两类：数据图数据集和模式图数据集</p>
+<p><strong>真实数据图数据集</strong></p>
+<ul>
+<li>AIDS Antiviral 数据集</li>
+<li>NASA 数据集</li>
+<li>Yeast 数据集</li>
+<li>Human 数据集</li>
+</ul>
+<p><strong>合成数据图数据集</strong></p>
+<p>GraphGen<sup id="fnref:19"><a href="#fn:19" class="footnote-ref" role="doc-noteref">19</a></sup>是其中一种应用广泛的生成工具可用于生成一系列有标签、连通的无向图。</p>
+<p>文献<sup id="fnref:20"><a href="#fn:20" class="footnote-ref" role="doc-noteref">20</a></sup>提出了一种图数据生成方法，该方法首先随机生成S个种子图，种子图的大小服从均值为T的泊松分布。</p>
+<h3 id="精确图匹配算法的性能比较">精确图匹配算法的性能比较</h3>
+<p><strong>无索引的图匹配算法性能比较</strong></p>
+<p>评价无索引的匹配技术一般包括3个标准：数据库构建时间、存储空间和平均匹配时间。</p>
+<ul>
+<li>数据库构建时间包括读取数据的I/O时间、提取特征等总时间；</li>
+<li>存储空间为在内存中建立完成的数据库大小；</li>
+<li>平均匹配时间为所有模式图匹配时间的平均值，当数据集中包含多个数据图时，每个模式图的匹配时间为匹配完数据集中所有数据图的累计时间。</li>
+</ul>
+<p><strong>基于索引的图匹配算法性能比较</strong></p>
+<p>对于基于索引的匹配算法，评价建立索引过程的指标一般包括索引规模和建立时间，评价匹配过程的指标通常包括备选图规模和总匹配时间。</p>
+
+
+<p>
+
+备选图规模表示通过索引过滤后需要进行精确匹配的备选图数目，匹配时间Ｔ可表示为\(T=T_{filter}+|C_q|\times T_{iso}\)，其中，\(T_{filter}\)表示通过索引选择备选图阶段所需时间，\(|C_q|\)表示筛选得到的备选图数目，\(T_{iso}\)是对每个备选图采用子图同构算法进行精确匹配的平均时间。
+
+</p>
+
+
+
+
+通常精确匹配采用的子图同构算法是NP问题，不同算法的匹配时间\(T_{iso}\)差别较小。\(|C_q|\)是影响整体匹配性能的关键因素，有效且高效的索引可以快速筛选备选图，尽量降低备选图规模。但是如果所建立的索引规模过大，无法完全载入内存，由于对硬盘的访问速度比内存的访问速度慢4~6个数量级，\(T_{filter}\)也将成为整个算法的性能瓶颈。
+
+
+<h2 id="4图匹配技术的应用现状和未来发展">4.图匹配技术的应用现状和未来发展</h2>
+<ol>
+<li>社会关系查询
+<ul>
+<li>社会关系查询是图数据匹配技术最主要和最广泛的应用之一。</li>
+<li>社会关系可以表示为图的形式（例如学术关系图、亲属关系图、社交网络图等），其中图的节点是人，节点上带有人物的姓名、年龄、职业等属性；节点间的边表示人与人之间的各种社会关系，边上的属性值表示具体的相互关系。</li>
+</ul>
+</li>
+<li>社会安全分析
+<ul>
+<li>鉴于犯罪行为和暴恐事件给国家和社会带来严重危害，分析犯罪规律并及早预防显得尤为重要。</li>
+<li>近年来，基于图数据匹配技术的犯罪规律和异常行为分析成为情报信息挖掘的重要研究方法．通过对网络行为（例如即时通信、邮件、社交网络等）和现实活动信息（例如乘坐交通工具、住宿、购物等）的获取及融合，建立以人物为节点、以活动关系为边的行为关系图．异常行为可定义为模式图的形式，通过图模式匹配技术在大规模关系图中进行搜索和定位，发现和预测特定的犯罪团伙和行为。</li>
+</ul>
+</li>
+<li>推荐系统
+<ul>
+<li>图数据匹配技术也是视频推荐、音乐推荐 、专家推荐等应用领域的重要方法之一。</li>
+</ul>
+</li>
+<li>网络攻击检测
+<ul>
+<li>随着互联网的迅速发展，网络安全问题也备受关注，典型的网络安全系统通常采用模式串匹配技术进行入侵检测和反病毒、反垃圾邮件检测，基于图模式匹配的检测技术成为新的发展方向。</li>
+</ul>
+</li>
+<li>生物数据分析
+<ul>
+<li>大规模的生物数据可以表示为图的形式，图匹配技术对复杂生物数据的分析和研究发挥着重要作用。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>图匹配技术面临着新的挑战和机遇：</p>
+</blockquote>
+<ol>
+<li>大规模图数据的存储空间将越来越大，严重影响传统的基于内存的图数据匹配技术的性能。
+<ul>
+<li>解决该问题可以从两个角度考虑：
+<ul>
+<li>从数据的角度来看，一方面可以采用分布式系统，另一方面，对原始图数据进行压缩表示。</li>
+<li>从匹配算法的角度来看，如何设计更加精简的多级索引匹配算法也将是未来的研究热点之一。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>图数据更新更加频繁，传统的静态图匹配算法难以直接、高效地应用于动态图数据，需要研究高效的动态图匹配算法。</li>
+<li>真实数据往往存在数据丢失和不确定性等问题，影响图数据匹配的准确度。</li>
+</ol>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Grzegorz Malewicz, Matthew H. Austern, Aart J. C. Bik et al. <strong>Pregel: a system for large-scale graph processing</strong>. SIGMOD Conference 2010: 135-146&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p>Mohamed Sarwat, Sameh Elnikety, Yuxiong He et al. <strong>Horton: Online Query Execution Engine for Large Distributed Graphs</strong>. ICDE 2012: 1289-1292&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p>Yucheng Low, Joseph Gonzalez, Aapo Kyrola et al. <strong>GraphLab: A New Framework For Parallel Machine Learning</strong>. UAI 2010: 340-349&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4">
+<p>M. R. Garey, David S. Johnson. <strong>Computers and Intractability: A Guide to the Theory of NP-Completeness</strong>. W. H. Freeman 1979, ISBN 0-7167-1044-7&#160;<a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5">
+<p>Julian R. Ullmann. <strong>An Algorithm for Subgraph Isomorphism</strong>. J. ACM 23(1): 31-42 (1976)&#160;<a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:6">
+<p>Luigi P. Cordella, Pasquale Foggia, Carlo Sansone et al. <strong>A (Sub)Graph Isomorphism Algorithm for Matching Large Graphs</strong>. IEEE Trans. Pattern Anal. Mach. Intell. 26(10): 1367-1372 (2004)&#160;<a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:7">
+<p>Dennis E. Shasha, Jason Tsong-Li Wang et al. <strong>Algorithmics and Applications of Tree and Graph Searching</strong>. PODS 2002: 39-52&#160;<a href="#fnref:7" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:8">
+<p>Huahai He, Ambuj K. <strong>Singh Graphs-at-a-time: query language and access methods for graph databases</strong>. SIGMOD Conference 2008: 405-418&#160;<a href="#fnref:8" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:9">
+<p>Peixiang Zhao, Jiawei Han. <strong>On Graph Query Optimization in Large Networks</strong>. Proc. VLDB Endow. 3(1): 340-351 (2010)&#160;<a href="#fnref:9" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:10">
+<p>Dennis E. Shasha, Jason Tsong-Li Wang, Rosalba Giugno. <strong>Algorithmics and Applications of Tree and Graph Searching</strong>. PODS 2002: 39-52&#160;<a href="#fnref:10" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:11">
+<p>Diane J. Cook, Lawrence B. Holder. <strong>Substructure Discovery Using Minimum Description Length and Background Knowledge</strong>. J. Artif. Intell. Res. 1: 231-255 (1994)&#160;<a href="#fnref:11" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:12">
+<p>Michael Wolverton, Pauline Berry, Ian W. Harrison et al. <strong>LAW: A Workbench for Approximate Pattern Matching in Relational Data</strong>. IAAI 2003: 143-150&#160;<a href="#fnref:12" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:13">
+<p>Xifeng Yan, Philip S. Yu, Jiawei Han. <strong>Graph Indexing: A Frequent Structure-based Approach</strong>. SIGMOD Conference 2004: 335-346&#160;<a href="#fnref:13" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:14">
+<p>James Cheng, Yiping Ke, Wilfred Ng. <strong>Fg-index: towards verification-free query processing on graph databases</strong>. SIGMOD Conference 2007: 857-872&#160;<a href="#fnref:14" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:15">
+<p>Peixiang Zhao, Jeffrey Xu Yu, Philip S. Yu. <strong>Graph Indexing: Tree + Delta &gt;= Graph</strong>. VLDB 2007: 938-949&#160;<a href="#fnref:15" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:16">
+<p>Sutanay Choudhury, Lawrence B. Holder, George Chin Jr. et al. <strong>StreamWorks: a system for dynamic graph search</strong>. SIGMOD Conference 2013: 1101-1104&#160;<a href="#fnref:16" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:17">
+<p>Lei Chen, Changliang Wang. <strong>Continuous Subgraph Pattern Search over Certain and Uncertain Graph Streams</strong>. IEEE Trans. Knowl. Data Eng. 22(8): 1093-1109 (2010)&#160;<a href="#fnref:17" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:18">
+<p>Sutanay Choudhury, Lawrence B. Holder, John Feo et al. <strong>Fast search for dynamic multi-relational graphs</strong>. DyNetMM@SIGMOD 2013: 1-8&#160;<a href="#fnref:18" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:19">
+<p>GraphGen is a synthetic graph data generator. <a href="https://cse.hkust.edu.hk/graphgen/">https://cse.hkust.edu.hk/graphgen/</a>&#160;<a href="#fnref:19" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:20">
+<p>Michihiro Kuramochi, George Karypis. <strong>Frequent Subgraph Discovery</strong>. ICDM 2001: 313-320&#160;<a href="#fnref:20" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+</section>
+
+  
+  
+  <footer class="mt-12 flex flex-wrap">
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/graph-pattern-matching"
+      >Graph Pattern  Matching</a
+    >
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/subgraph-isomorphism"
+      >subgraph isomorphism</a
+    >
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/%E7%BB%BC%E8%BF%B0"
+      >综述</a
+    >
+    
+  </footer>
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end p-6 pl-3 no-underline"
+      href="https://axtonsun.github.io/posts/graphdataprocessing2011/"
+      ><span>云计算环境下的大规模图数据处理技术</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60">
+  <div class="mr-auto">
+    &copy; 2022
+    <a class="link" href="https://axtonsun.github.io">Axton</a>
+  </div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank">Powered by Hugo️️</a
+  >️
+  <a class="link" href="https://github.com/nanxiaobei/hugo-paper" rel="noopener" target="_blank"
+    >▷ Paper 6</a
+  >
+</footer>
+
+  </body>
+</html>

@@ -7,7 +7,40 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>Copyright © 2022–2022, Axton; all rights reserved.</copyright>
-    <lastBuildDate>Sun, 04 Dec 2022 17:36:10 +0800</lastBuildDate><atom:link href="https://axtonsun.github.io/tags/%E7%BB%BC%E8%BF%B0/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 05 Dec 2022 23:04:15 +0800</lastBuildDate><atom:link href="https://axtonsun.github.io/tags/%E7%BB%BC%E8%BF%B0/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>大规模图数据匹配技术综述</title>
+      <link>https://axtonsun.github.io/posts/graphpatternmatching2015/</link>
+      <pubDate>Mon, 05 Dec 2022 23:04:15 +0800</pubDate>
+      
+      <guid>https://axtonsun.github.io/posts/graphpatternmatching2015/</guid>
+      <description>图作为一种广泛应用的数据结构，非常适合刻画这种具有内在关联性的数据，许多领域的问题都可以通过图的相关理论和技术解决，例如社交网络与Web网络分析、推荐系统、社会安全分析、生物数据分析等。
+图模式匹配技术(graph pattern matching)作为实现图数据上高效查询的重要手段，广泛应用于上述各领域的实际问题中。
+面对海量关联数据带来的新挑战，各大公司纷纷提出了图数据处理的并行计算模型和系统，包括谷歌公司的大规模图数据处理系统Pregel1、微软研究院的大规模分布式图数据查询(querying large distributed graphs)系统2以及CMU Select实验室研发的GraphLab系统3，这些系统采用分布式计算等技术支持大规模图数据上的高效匹配、查询等算法。
+对千万级甚至更大规模的图数据进行高效、准确的匹配查询仍然面临一些问题：
+匹配问题复杂 子图同构(subgraph isomorphism)问题属于NP-Complete问题4 措施 设计更高效的搜索算法 采用近似算法 数据规模巨大 采用数据挖掘等技术提取图中的路径、树、子图作为索引特征 数据更新频繁 引入增量处理技术 在所有图匹配问题中，子图同构(subgraph isomorphism)是需要解决的基本问题。
+1.图匹配问题 基本的图匹配问题与定义 定义三元组\((V,E,L)\)表示一个图，其中\(V\)表示图中节点的集合，$E$表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边喝节点可以带有属性信息，\(L\)表示属性 映射函数，将节点或边映射到一个或一组属性上。 一个数据图与模式图的精确匹配问题称为子图同构，需要在数据图中搜索出与模式图在结构和节点与边属性上完全匹配的子图。
+精确图匹配问题需要在数据图中找到所有满足上述条件的子图作为模式图的匹配结果。
+扩展的图匹配问题 结构匹配和语义匹配
+图匹配问题按图数据是否在节点和边上包含语义信息分为语义匹配和结构匹配。
+图匹配的许多前期研究基于严格的图结构相似性，即保证所匹配的节点周围具有相同的连通结构，这种匹配问题称为结构匹配，主要应用于化学物质相似结构的检测。
+结构匹配的代表性算法包括1976年最早提出的Ullmann算法5以及近年来在该算法基础上改进的VF26，QuickSI7，GraphQL8，Spath9等算法。
+在匹配这类图数据时，需要同时保证匹配结果在结构和语义信息上与模式图一致，这种匹配问题称为语义匹配。如典型的GraphGrep10算法。
+精确匹配和近似匹配
+图匹配问题按匹配结果是否要求与模式图完全一致分为精确匹配和近似匹配。
+精确匹配指匹配的结果和模式图的结构及属性完全一致，这种匹配方式主要应用于对匹配结果的准确率要求较高的领域，包括生物数据分析、社会安全分析等，前面介绍的结构匹配算法和语义匹配算法都属于典型的精确匹配技术。
+近似匹配是一种可以容忍结果中存在一定噪声和错误的匹配算法，代表性的近似匹配算法包括SUBDUE11，LAW12等，主要通过定义编辑距离、最大公共子图(minium common subgraph)、最小公共超图(minimum common supergraph)等方法衡量两个图的相似程度。
+静态图匹配和动态图匹配
+图匹配问题按数据图是否更新分为动态图匹配和静态图匹配。
+静态图匹配要求所有的数据图不随着时间推移而变化，GIndex13是最有代表性的静态图匹配算法，后续还有FG-Index14，Tree+delta15等算法。
+动态图匹配能够在图数据更新时满足实时匹配的性能需求。主要采用增量处理技术，仅对更新的数据图进行分析，代表性工作包括文献161718。
+最优算法和近似算法
+图匹配算法按是否能获得准确结果分为最优算法和近似算法
+最优算法保证匹配结果完全精确，例如精确匹配问题的最优算法可以保证计算结果与模式图完全同构，近似匹配问题的最优算法获得与模式图最近似的一系列匹配结果。
+近似算法不同于近似匹配，近似算法通常基于概率统计等数学模型，非常适合动态图匹配等对算法实时性要求较高且只需满足一定准确率的匹配问题。
+2.精确图匹配技术 Exact Graph Pattern Matching Non-index-based Matching Ullmann(1976) VF2(2001) GraphQL(2008) GADDI(2009) Spath(2010) Index-based Matching Non-mining-based Matching GraphGrep(2002) CTree(2006) GCoding(2008) Mining-based Matching GIndex(2004) FG-Index(2007) Tree-Delta(2007) 无索引的匹配技术 精确图匹配是一种NP完全问题，算法设计时利用图中的结构和语义信息可以有效提高图匹配的性能。</description>
+    </item>
+    
     <item>
       <title>云计算环境下的大规模图数据处理技术</title>
       <link>https://axtonsun.github.io/posts/graphdataprocessing2011/</link>
