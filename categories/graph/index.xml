@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Axton</title>
-    <link>https://axtonsun.github.io/</link>
-    <description>Recent content on Axton</description>
+    <title>Graph on Axton</title>
+    <link>https://axtonsun.github.io/categories/graph/</link>
+    <description>Recent content in Graph on Axton</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>Copyright © 2022–2022, Axton; all rights reserved.</copyright>
-    <lastBuildDate>Sun, 04 Dec 2022 17:36:10 +0800</lastBuildDate><atom:link href="https://axtonsun.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 04 Dec 2022 17:36:10 +0800</lastBuildDate><atom:link href="https://axtonsun.github.io/categories/graph/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>云计算环境下的大规模图数据处理技术</title>
       <link>https://axtonsun.github.io/posts/graphdataprocessing2011/</link>
@@ -31,18 +31,6 @@
 以GFS6、HDFS为代表的分布式文件系统，对于邻接矩阵和邻接表等结构，可以直接存放 以BigTable7、Hbase为代表的NoSQL(Not Only SQL)分布式数据库。 NoSQL数据库采用的数据模型主要有 文档存储模型 CouchDB和MongoDB采用这种存储模型 不太适合以邻接矩阵或邻接表组织的图数据 列式存储模型 BigTable、Hbase、Cassandra采用这种存储模型 Key Value 存储模型 较为适合存储大规模图数据 Dynamo8和SimpleDB采用这种存储模型 图存储模型 Neo4j采用这种模型存储图数据 图数据的索引结构 索引是传统关系数据库中的关键技术，包括B+树索引、Hash索引、位图索引等。
 从使用目的和实际效果的角度，索引可分为两大类 一种是为支持普通查询而在云计算环境下建立索引，有助于提高数据查找效率，主要在分布式图数据库中使用 另一种是为加快计算处理而建立的索引，主要在图的计算处理应用中使用，如最短路径计算、PageRank计算、聚类分析等 目前的云环境下用于数据管理的索引结构可以分为适用于P2P网络结构的索引以及适用于Shared-nothing集群结构的索引
 Neo4j的索引分为两类 数据库本身就是一个树形结构的索引，可用于提高查询效率； 还可以使用独立的Lucene索引，提供全文索引和索引命中率排序功能。 3.</description>
-    </item>
-    
-    <item>
-      <title>Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems</title>
-      <link>https://axtonsun.github.io/posts/prompt2020/</link>
-      <pubDate>Sat, 17 Sep 2022 12:36:30 +0800</pubDate>
-      
-      <guid>https://axtonsun.github.io/posts/prompt2020/</guid>
-      <description>文献标题：Prompt: Dynamic Data-Partitioning for Distributed Micro-batch Stream Processing Systems 发表时间：2020 作者单位：普渡大学 (Purdue University) 文献类型：会议 期刊名称：SIGMOD / Research 28: Stream Processing 数据来源： A new data partitioning scheme Prompt leverages the charcteristics of the micro-batch processing model
-In the batching phase
-a frequency-aware buffering mechanism progressively maintains run-time statistics, and provides on- line key-based sorting as data tuples arrive a workload-aware greedy algorithm
-partitions the buffered data tuples efficiently for the Map stage In the processing phase</description>
     </item>
     
   </channel>
