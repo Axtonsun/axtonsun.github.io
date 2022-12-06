@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #fff"
+  lang="en"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  
+  <title>动态图模式匹配技术综述 - Axton</title>
+
+  
+  <meta name="theme-color" />
+  
+  <meta name="description" content="图(graph)作为一种广泛使用的数据结构，非常适合刻画这种存在内在关联性的数据，图中的每个节点代表现实世界中的实体对象，节点之间的边表示实体之间的关系。
+动态图模式匹配技术(dynamic graph pattern matching techniques)是分析动态图数据上高效查询的重要手段，广泛应用于众多重要领域。
+动态图模式匹配技术是指在一个实时更新的图中找到与给定模式图相匹配的子图，这里的匹配是指结构相同以及满足特定的语义关系等。
+现有动态图数据匹配相关研究工作主要从以下几个方面展开：
+针对动态图数据频繁更新的特性，研究增量处理技术，仅对动态图数据更新的部分进行分析和匹配； 针对动态图数据规模大的特性，研究如何利用分布式并行图处理框架，来加速动态图的匹配计算； 针对动态图分析实时性要求高的特性，除了综合运用增量处理技术和分布式并行图处理框架降低匹配处理时延之外，还有学者研究图匹配的近似计算技术，在求解时延和匹配结果假阳性错误率之间做权衡。 1. 动态图匹配问题的定义和分类 1.1 基本动态图匹配问题 通常用三元组\((V,E,L)\)对图数据进行形式化描述，其中\(V\)表示图中节点的集合，\(E\)表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边和节点可以带有属性信息，\(L\)表示属性映射函数，将节点或边映射到一个或一组属性上。用符号 \(G,P,u,v\)分别表示数据图、模式图(或查询图)、单个数据图节点和单个模式图节点。 目前业界所使用的数据图\(G\)的类型可以分为两种：第一种数据图是超大图，第二种数据图是由大量的小图组成。 动态图又称图流(graph streams)，是指会随时间发生变化的图。
+动态图的更新形式可分为以下两类：
+图结构更新，随着时间推移，图数据中的节点和边会被插入和删除，从而导致图数据的结构发生变化； 图内容更新，随着时间推移，图数据中的节点和边所关联的数据对象的内容或属性会发生改变，从而导致图数据的内容发生变化。 1.1.1 图结构更新 定义1. 动态图
+已知初始数据图\(G\)，引发数据图更新的操作可以用三元组\(\left \langle op,u_i,u_j \right \rangle\) 表示。其中，\(op=\{I,D\}\)表示操作类型，\(op=I\)时表示增加边操作，\(op=D\)时表示删除边操作；\(u_i\)和\(u_j\)表示数据图中与操作\(op\)相关的两个图节点。若用更新操作集合 \(GC_t = \left \{ \left \langle op_1,u_1,u_2 \right \rangle,...,\left \langle op_k,u_k,u_{k&#43;1} \right \rangle \right \}\left ( k\ge 1 \right )\)表示数据图\(G\)在\(t\)时刻的所有更新操作，用 \(GC:G→G&#39;\)表示数据图\(G\)基于更新操作集合\(GC\)更新后得到新数据图\(G&#39;\)的过程，则时间域\([0,T]\)上的动态图\(G_{D}^{[0,T]}\)是一个数据图序列，定义为 $$ G_{D}^{[0,T]}=\{ G_0,G_1,G_2,&hellip;,G_T \} $$
+$$ G_0=G,GC_0=\phi,GC_t:G_{t-1}\to G_t\left ( 1 \le t \le T \right ) $$" />
+  <meta name="author" content="Axton" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="https://axtonsun.github.io/main.min.css" />
+
+  
+  <script
+    defer
+    src="https://axtonsun.github.io/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+  
+  
+  <link
+    rel="preload"
+    as="image"
+    href="https://axtonsun.github.io/theme.png"
+  />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/15446174?s=400&amp;u=d3ade97b9363ffa8594afcb9ee947be2e47a7cb6&amp;v=4" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/twitter.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/github.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/instagram.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/rss.svg" />
+  
+
+  
+  <link rel="icon" href="https://axtonsun.github.io/images/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://axtonsun.github.io/images/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.101.0" />
+
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <meta property="og:title" content="动态图模式匹配技术综述" />
+<meta property="og:description" content="图(graph)作为一种广泛使用的数据结构，非常适合刻画这种存在内在关联性的数据，图中的每个节点代表现实世界中的实体对象，节点之间的边表示实体之间的关系。
+动态图模式匹配技术(dynamic graph pattern matching techniques)是分析动态图数据上高效查询的重要手段，广泛应用于众多重要领域。
+动态图模式匹配技术是指在一个实时更新的图中找到与给定模式图相匹配的子图，这里的匹配是指结构相同以及满足特定的语义关系等。
+现有动态图数据匹配相关研究工作主要从以下几个方面展开：
+针对动态图数据频繁更新的特性，研究增量处理技术，仅对动态图数据更新的部分进行分析和匹配； 针对动态图数据规模大的特性，研究如何利用分布式并行图处理框架，来加速动态图的匹配计算； 针对动态图分析实时性要求高的特性，除了综合运用增量处理技术和分布式并行图处理框架降低匹配处理时延之外，还有学者研究图匹配的近似计算技术，在求解时延和匹配结果假阳性错误率之间做权衡。 1. 动态图匹配问题的定义和分类 1.1 基本动态图匹配问题 通常用三元组\((V,E,L)\)对图数据进行形式化描述，其中\(V\)表示图中节点的集合，\(E\)表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边和节点可以带有属性信息，\(L\)表示属性映射函数，将节点或边映射到一个或一组属性上。用符号 \(G,P,u,v\)分别表示数据图、模式图(或查询图)、单个数据图节点和单个模式图节点。 目前业界所使用的数据图\(G\)的类型可以分为两种：第一种数据图是超大图，第二种数据图是由大量的小图组成。 动态图又称图流(graph streams)，是指会随时间发生变化的图。
+动态图的更新形式可分为以下两类：
+图结构更新，随着时间推移，图数据中的节点和边会被插入和删除，从而导致图数据的结构发生变化； 图内容更新，随着时间推移，图数据中的节点和边所关联的数据对象的内容或属性会发生改变，从而导致图数据的内容发生变化。 1.1.1 图结构更新 定义1. 动态图
+已知初始数据图\(G\)，引发数据图更新的操作可以用三元组\(\left \langle op,u_i,u_j \right \rangle\) 表示。其中，\(op=\{I,D\}\)表示操作类型，\(op=I\)时表示增加边操作，\(op=D\)时表示删除边操作；\(u_i\)和\(u_j\)表示数据图中与操作\(op\)相关的两个图节点。若用更新操作集合 \(GC_t = \left \{ \left \langle op_1,u_1,u_2 \right \rangle,...,\left \langle op_k,u_k,u_{k&#43;1} \right \rangle \right \}\left ( k\ge 1 \right )\)表示数据图\(G\)在\(t\)时刻的所有更新操作，用 \(GC:G→G&#39;\)表示数据图\(G\)基于更新操作集合\(GC\)更新后得到新数据图\(G&#39;\)的过程，则时间域\([0,T]\)上的动态图\(G_{D}^{[0,T]}\)是一个数据图序列，定义为 $$ G_{D}^{[0,T]}=\{ G_0,G_1,G_2,&hellip;,G_T \} $$
+$$ G_0=G,GC_0=\phi,GC_t:G_{t-1}\to G_t\left ( 1 \le t \le T \right ) $$" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://axtonsun.github.io/posts/dynamicgraphpatternmatching2018/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-12-06T16:22:39+08:00" />
+<meta property="article:modified_time" content="2022-12-06T16:22:39+08:00" />
+
+
+  
+  <meta itemprop="name" content="动态图模式匹配技术综述">
+<meta itemprop="description" content="图(graph)作为一种广泛使用的数据结构，非常适合刻画这种存在内在关联性的数据，图中的每个节点代表现实世界中的实体对象，节点之间的边表示实体之间的关系。
+动态图模式匹配技术(dynamic graph pattern matching techniques)是分析动态图数据上高效查询的重要手段，广泛应用于众多重要领域。
+动态图模式匹配技术是指在一个实时更新的图中找到与给定模式图相匹配的子图，这里的匹配是指结构相同以及满足特定的语义关系等。
+现有动态图数据匹配相关研究工作主要从以下几个方面展开：
+针对动态图数据频繁更新的特性，研究增量处理技术，仅对动态图数据更新的部分进行分析和匹配； 针对动态图数据规模大的特性，研究如何利用分布式并行图处理框架，来加速动态图的匹配计算； 针对动态图分析实时性要求高的特性，除了综合运用增量处理技术和分布式并行图处理框架降低匹配处理时延之外，还有学者研究图匹配的近似计算技术，在求解时延和匹配结果假阳性错误率之间做权衡。 1. 动态图匹配问题的定义和分类 1.1 基本动态图匹配问题 通常用三元组\((V,E,L)\)对图数据进行形式化描述，其中\(V\)表示图中节点的集合，\(E\)表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边和节点可以带有属性信息，\(L\)表示属性映射函数，将节点或边映射到一个或一组属性上。用符号 \(G,P,u,v\)分别表示数据图、模式图(或查询图)、单个数据图节点和单个模式图节点。 目前业界所使用的数据图\(G\)的类型可以分为两种：第一种数据图是超大图，第二种数据图是由大量的小图组成。 动态图又称图流(graph streams)，是指会随时间发生变化的图。
+动态图的更新形式可分为以下两类：
+图结构更新，随着时间推移，图数据中的节点和边会被插入和删除，从而导致图数据的结构发生变化； 图内容更新，随着时间推移，图数据中的节点和边所关联的数据对象的内容或属性会发生改变，从而导致图数据的内容发生变化。 1.1.1 图结构更新 定义1. 动态图
+已知初始数据图\(G\)，引发数据图更新的操作可以用三元组\(\left \langle op,u_i,u_j \right \rangle\) 表示。其中，\(op=\{I,D\}\)表示操作类型，\(op=I\)时表示增加边操作，\(op=D\)时表示删除边操作；\(u_i\)和\(u_j\)表示数据图中与操作\(op\)相关的两个图节点。若用更新操作集合 \(GC_t = \left \{ \left \langle op_1,u_1,u_2 \right \rangle,...,\left \langle op_k,u_k,u_{k&#43;1} \right \rangle \right \}\left ( k\ge 1 \right )\)表示数据图\(G\)在\(t\)时刻的所有更新操作，用 \(GC:G→G&#39;\)表示数据图\(G\)基于更新操作集合\(GC\)更新后得到新数据图\(G&#39;\)的过程，则时间域\([0,T]\)上的动态图\(G_{D}^{[0,T]}\)是一个数据图序列，定义为 $$ G_{D}^{[0,T]}=\{ G_0,G_1,G_2,&hellip;,G_T \} $$
+$$ G_0=G,GC_0=\phi,GC_t:G_{t-1}\to G_t\left ( 1 \le t \le T \right ) $$"><meta itemprop="datePublished" content="2022-12-06T16:22:39+08:00" />
+<meta itemprop="dateModified" content="2022-12-06T16:22:39+08:00" />
+<meta itemprop="wordCount" content="1078">
+<meta itemprop="keywords" content="Graph Pattern Matching,subgraph isomorphism,综述," />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="动态图模式匹配技术综述"/>
+<meta name="twitter:description" content="图(graph)作为一种广泛使用的数据结构，非常适合刻画这种存在内在关联性的数据，图中的每个节点代表现实世界中的实体对象，节点之间的边表示实体之间的关系。
+动态图模式匹配技术(dynamic graph pattern matching techniques)是分析动态图数据上高效查询的重要手段，广泛应用于众多重要领域。
+动态图模式匹配技术是指在一个实时更新的图中找到与给定模式图相匹配的子图，这里的匹配是指结构相同以及满足特定的语义关系等。
+现有动态图数据匹配相关研究工作主要从以下几个方面展开：
+针对动态图数据频繁更新的特性，研究增量处理技术，仅对动态图数据更新的部分进行分析和匹配； 针对动态图数据规模大的特性，研究如何利用分布式并行图处理框架，来加速动态图的匹配计算； 针对动态图分析实时性要求高的特性，除了综合运用增量处理技术和分布式并行图处理框架降低匹配处理时延之外，还有学者研究图匹配的近似计算技术，在求解时延和匹配结果假阳性错误率之间做权衡。 1. 动态图匹配问题的定义和分类 1.1 基本动态图匹配问题 通常用三元组\((V,E,L)\)对图数据进行形式化描述，其中\(V\)表示图中节点的集合，\(E\)表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边和节点可以带有属性信息，\(L\)表示属性映射函数，将节点或边映射到一个或一组属性上。用符号 \(G,P,u,v\)分别表示数据图、模式图(或查询图)、单个数据图节点和单个模式图节点。 目前业界所使用的数据图\(G\)的类型可以分为两种：第一种数据图是超大图，第二种数据图是由大量的小图组成。 动态图又称图流(graph streams)，是指会随时间发生变化的图。
+动态图的更新形式可分为以下两类：
+图结构更新，随着时间推移，图数据中的节点和边会被插入和删除，从而导致图数据的结构发生变化； 图内容更新，随着时间推移，图数据中的节点和边所关联的数据对象的内容或属性会发生改变，从而导致图数据的内容发生变化。 1.1.1 图结构更新 定义1. 动态图
+已知初始数据图\(G\)，引发数据图更新的操作可以用三元组\(\left \langle op,u_i,u_j \right \rangle\) 表示。其中，\(op=\{I,D\}\)表示操作类型，\(op=I\)时表示增加边操作，\(op=D\)时表示删除边操作；\(u_i\)和\(u_j\)表示数据图中与操作\(op\)相关的两个图节点。若用更新操作集合 \(GC_t = \left \{ \left \langle op_1,u_1,u_2 \right \rangle,...,\left \langle op_k,u_k,u_{k&#43;1} \right \rangle \right \}\left ( k\ge 1 \right )\)表示数据图\(G\)在\(t\)时刻的所有更新操作，用 \(GC:G→G&#39;\)表示数据图\(G\)基于更新操作集合\(GC\)更新后得到新数据图\(G&#39;\)的过程，则时间域\([0,T]\)上的动态图\(G_{D}^{[0,T]}\)是一个数据图序列，定义为 $$ G_{D}^{[0,T]}=\{ G_0,G_1,G_2,&hellip;,G_T \} $$
+$$ G_0=G,GC_0=\phi,GC_t:G_{t-1}\to G_t\left ( 1 \le t \le T \right ) $$"/>
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a class="-translate-x-[1px] -translate-y-0.5 text-3xl font-bold" href="https://axtonsun.github.io"
+      >Axton</a
+    >
+    <a
+      class="btn-dark ml-6 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+    ></a>
+  </div>
+
+  <a
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+  ></a>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#fff"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkVal = localStorage.getItem('dark');
+    setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+    <nav class="lg:ml-12 lg:flex lg:flex-row lg:items-center lg:space-x-6">
+      
+      <a
+        class="block text-center text-2xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/about/"
+        >About</a
+      >
+      
+      <a
+        class="block text-center text-2xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/contact/"
+        >Contact</a
+      >
+      
+    </nav>
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:mt-0 lg:ml-12 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/twitter.svg)"
+        href=" https://twitter.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/github.svg)"
+        href=" https://github.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/instagram.svg)"
+        href=" https://instagram.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/rss.svg)"
+        href=" https://axtonsun.github.io/index.xml "
+        target="_blank"
+      ></a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pt-20 pb-32 dark:prose-invert"
+    >
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">动态图模式匹配技术综述</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Dec 6, 2022</time>
+      
+      
+      <span class="mx-1">&middot;</span>
+      <span>Axton</span>
+      
+    </div>
+    
+  </header>
+
+  <section><p>图(graph)作为一种广泛使用的数据结构，非常适合刻画这种存在内在关联性的数据，图中的每个节点代表现实世界中的实体对象，节点之间的边表示实体之间的关系。</p>
+<p>动态图模式匹配技术(dynamic graph pattern matching techniques)是分析动态图数据上高效查询的重要手段，广泛应用于众多重要领域。</p>
+<p>动态图模式匹配技术是指在一个实时更新的图中找到与给定模式图相匹配的子图，这里的匹配是指结构相同以及满足特定的语义关系等。</p>
+<p>现有动态图数据匹配相关研究工作主要从以下几个方面展开：</p>
+<ul>
+<li>针对<strong>动态图数据频繁更新</strong>的特性，研究增量处理技术，仅对动态图数据更新的部分进行分析和匹配；</li>
+<li>针对<strong>动态图数据规模大</strong>的特性，研究如何利用分布式并行图处理框架，来加速动态图的匹配计算；</li>
+<li>针对<strong>动态图分析实时性要求高</strong>的特性，除了综合运用增量处理技术和分布式并行图处理框架降低匹配处理时延之外，还有学者研究图匹配的近似计算技术，在求解时延和匹配结果假阳性错误率之间做权衡。</li>
+</ul>
+<h2 id="1-动态图匹配问题的定义和分类">1. 动态图匹配问题的定义和分类</h2>
+<h3 id="11-基本动态图匹配问题">1.1 基本动态图匹配问题</h3>
+
+
+<!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+
+
+
+
+<p>
+
+通常用三元组\((V,E,L)\)对图数据进行形式化描述，其中\(V\)表示图中节点的集合，\(E\)表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边和节点可以带有属性信息，\(L\)表示属性映射函数，将节点或边映射到一个或一组属性上。用符号 \(G,P,u,v\)分别表示数据图、模式图(或查询图)、单个数据图节点和单个模式图节点。
+
+</p>
+
+
+
+
+目前业界所使用的数据图\(G\)的类型可以分为两种：第一种数据图是超大图，第二种数据图是由大量的小图组成。
+
+
+<p>动态图又称图流(graph streams)，是指会随时间发生变化的图。</p>
+<p>动态图的更新形式可分为以下两类：</p>
+<ul>
+<li><strong>图结构更新</strong>，随着时间推移，图数据中的节点和边会被插入和删除，从而导致图数据的结构发生变化；</li>
+<li><strong>图内容更新</strong>，随着时间推移，图数据中的节点和边所关联的数据对<strong>象的内容或属性会发生改变，从而导致图数据的内容发生变化。</strong></li>
+</ul>
+<h4 id="111-图结构更新">1.1.1 图结构更新</h4>
+<p><strong>定义1. 动态图</strong></p>
+<p>
+
+<p>
+已知初始数据图\(G\)，引发数据图更新的操作可以用三元组\(\left \langle op,u_i,u_j \right \rangle\) 表示。其中，\(op=\{I,D\}\)表示操作类型，\(op=I\)时表示增加边操作，\(op=D\)时表示删除边操作；\(u_i\)和\(u_j\)表示数据图中与操作\(op\)相关的两个图节点。若用更新操作集合 \(GC_t = \left \{ \left \langle op_1,u_1,u_2 \right \rangle,...,\left \langle op_k,u_k,u_{k+1} \right \rangle  \right \}\left ( k\ge 1 \right )\)表示数据图\(G\)在\(t\)时刻的所有更新操作，用 \(GC:G→G'\)表示数据图\(G\)基于更新操作集合\(GC\)更新后得到新数据图\(G'\)的过程，则时间域\([0,T]\)上的动态图\(G_{D}^{[0,T]}\)是一个数据图序列，定义为
+
+</p>
+
+
+$$
+G_{D}^{[0,T]}=\{ G_0,G_1,G_2,&hellip;,G_T \}
+$$</p>
+<p>$$
+G_0=G,GC_0=\phi,GC_t:G_{t-1}\to G_t\left ( 1 \le t \le T \right )
+$$</p>
+<p><strong>定义2. 动态图同构匹配</strong></p>
+<p>
+
+<p>
+
+已知一个模式图\(P(V_p,E_p,L_p)\)和一个动态图\(G_{D}^{[0,T]} =\left \{ G_0,G_1,G_2,...,G_T \right \}\)，动态图同构匹配问题是指模式图\(P\)和动态图\(G_{D}^{[0,T]}\) 在\(t\)时刻的数据图\(G_t\)的数据子图之间存在一个双射函数\(f\)，且\(f\)满足：
+
+</p>
+
+
+$$
+\forall v\in V_p,L_p(v)=L_{sub-t}(f(v));
+$$</p>
+<p>$$
+\forall \left ( u_i,u_j \right )\in E_p,\left ( f(v_i),f(v_j) \right ) \in E_{sub-t},且L_p(u_i,u_j)=L_{sub-t}\left ( f(v_i),f(v_j) \right )
+$$</p>
+
+
+<p>
+
+其中，\(f(v)\)表示数据图中与模式图节点\(v\)满足双射关系的节点，即数据图中与节点\(v\)相匹配的节点。
+
+</p>
+
+
+<p>子图同构是NP完全问题，基于子图同构的概念完成模式图与数据图之间的匹配。近似图模式匹配按照实际应用对匹配近似程度的不同要求由弱到强分为<strong>受限模拟(bounded simulation)匹配</strong>、<strong>图模拟(graph simulation)匹配</strong>、<strong>双向模拟(dual simulation)匹配</strong>、<strong>强模拟(strong simulation)匹配</strong>和<strong>严格模拟(strict simulation)匹配</strong>，以上统称为模拟匹配。</p>
+<ul>
+<li>
+<p><strong>受限模拟匹配</strong>将数据图和模式图边与边之间的严格匹配放松至数据图的一条路径和模式图的一条边进行匹配，数据图节点与模式图节点的匹配条件只要满足节点属性值相同且数据图节点的一个子孙节点与模式图节点的后继节点的属性值相同即可；</p>
+</li>
+<li>
+<p><strong>图模拟匹配</strong>与受限模拟相比，要求数据图中的匹配节点保持与模式图中对应节点的后继关系，即,数据图节点存在后继节点与模式图节点的后继节点的属性值相同；</p>
+</li>
+<li>
+<p><strong>双向模拟匹配</strong>在图模拟匹配的基础上，还要求数据图中的匹配节点保持与模式图中对应节点的前驱关系；</p>
+</li>
+<li>
+<p><strong>强模拟匹配</strong>在双向模拟匹配的基础上，进一步要求匹配节点所在子图(子图中可能包含非匹配点)的半径不大于模式图的直径；</p>
+</li>
+<li>
+<p><strong>严格模拟匹配</strong>比强模拟匹配要求更严格，要求完全由匹配节点构成的子图的半径不大于模式图的直径。</p>
+</li>
+</ul>
+<p>模拟匹配类是一种可以容忍结果中存在一定噪声和错误的匹配算法，在社交网络分析和Web网络分析等应用中发挥着重要作用。</p>
+<p>模拟匹配的匹配结果与模式图之间存在一定的差别，但通常可以满足实际应用的需求，因此也通常被看做是正确的匹配结果。</p>
+<p><strong>定义3. 动态图的图模拟匹配</strong></p>
+
+
+<p>
+
+已知一个模式图 \(P(V_p,E_p,L_p)\)和一个动态图\(G_{D}^{[0,T]} =\left \{ G_0,G_1,G_2,...,G_T \right \}\)，动态图的图模拟匹配是指模式图\(P\)和\(t\)时刻数据图\(G_t(V_t,E_t,L_t)\)之间存在二元关系\(S\subseteq V_p\times V_t\)，其中，\(V_p\)和\(V_t\)分别表示模式图节点和数据图节点的集合，且\(S\)满足：
+
+</p>
+
+
+<ul>
+<li>
+<p>节点约束：
+$$
+if\ M=[(v_2,u_2),(v_3,u_3),(v_4,u_4)]\ then\ L_p(v)=L_t(u)
+$$</p>
+</li>
+<li>
+<p>边约束：
+$$
+\forall (v,v&rsquo;)\in E_p,\exists (u,u&rsquo;)\in E_t:(u&rsquo;,v&rsquo;)\in S
+$$</p>
+</li>
+<li>
+<p>图约束：
+$$
+\forall v\in V_p,\exists u\in V_t:(u,v)\in S
+$$</p>
+</li>
+</ul>
+<h4 id="112-图内容更新">1.1.2 图内容更新</h4>
+<p>图内容被更新的情况指节点或边的属性值或者对图中某一特定对象的评价方式会随着时间发生变化。</p>
+<h3 id="12-动态图匹配问题分类">1.2 动态图匹配问题分类</h3>
+<p>这里所采用的分类方法并不相互独立，因此，在每类中介绍的匹配算法通常也运用了其他类型的匹配。</p>
+<p><strong>1.2.1 面向结构变化的匹配和面向内容变化的匹配</strong></p>
+<p>动态图匹配问题按图中的<strong>拓扑结构关系</strong>是否发生变化分为<strong>面向结构变化的匹配</strong>和<strong>面向内容变化的匹配</strong>。</p>
+<p>动态图匹配的很多研究工作都围绕着数据图中的节点或边随着时间推移发生动态增删，导致图的拓扑结构发生变化这种情况展开讨论，称为<strong>面向结构变化的动态图匹配问题</strong>，主要应用于网络异常攻击检测和社交网络关系检测等场景。</p>
+<p>图数据的拓扑结构不会频繁发生改变，而图数据中节点的属性值(例如服务器的空闲内存量)和边的属性值(例如链路的有效带宽)会随时间频繁发生变 化，称为<strong>面向内容变化的动态图匹配问题</strong>。</p>
+<p><strong>1.2.2 同构匹配和模拟匹配</strong></p>
+<p>动态图匹配问题是按照基于<strong>双射函数</strong>判定还是基于<strong>二元关系</strong>判定，可以相应地被称为<strong>同构匹配</strong> (isomorphism matching)和<strong>模拟匹配</strong>(simulation matching)。</p>
+<p>如果模式图和数据子图之间存在一个双射函数，则称为<strong>同构匹配</strong>，这种匹配需要保证节点周围有相同的连通结构，要求与模式图完全一致，主要用于蛋白质分子的相互作用、网络异常行为监测等对结构要求比较严格的图数据分析应用。</p>
+<p>如果模式图和数据图之间存在二元关系，则称为<strong>模拟匹配</strong>。模拟匹配属于近似匹配，通常先根据数据图节点的标签为模式图中的每一个节点产生匹 配候选集，再根据模式图中对节点的前驱和后继的不同近似匹配程度要求过滤掉不匹配的节点。</p>
+<p><strong>1.2.3 精确算法和近似算法</strong></p>
+<p>按照是否能够获得准确结果，动态图匹配算法分为<strong>精确算法</strong>和<strong>近似算法</strong>。<strong>精确算法</strong>能够保证匹配的结果完全精确，主要应用在网络异常检测和生物数据分析等这类对匹配的结果准确率有严格要求的领域。例如，同构匹配问题的精确算法可以保证计算结果与模式图完全同构，模拟匹配问题的精确算法可以获得与模式图满足二元关系的一系列结果。</p>
+<p><strong>近似算法</strong>不同于模拟匹配，近似算法通常基于概率统计等数学模型，计算结果中除了正确的结果之外，还包含一部分错误的结果，可以通过参数调整将错误比率控制在一定范围内。</p>
+<p>精确算法和近似算法是<strong>决定匹配结果准确率</strong>的两种算法，而同构匹配和模拟匹配则是<strong>不同类型的图匹配模型</strong>，概念上有明显区别。</p>
+<p><strong>1.2.4 集中式匹配和分布式匹配</strong></p>
+<p>按照是否部署在分布式的平台上，动态图匹配问题分为集中式匹配和分布式匹配。</p>
+<p>集中式匹配在单台计算机上运行，主要处理规模相对较小的图数据。</p>
+<p>目前，动态图集中式匹配主要采用<strong>基于连接(join)的匹配方法</strong>或者<strong>基于探索(exploration)<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>的匹配方法</strong>实现。</p>
+<ul>
+<li><strong>基于连接的匹配方法</strong>采用将查询图进行分解的策略，对每一个查询分片进行匹配后将得到的结果进行连接，一般需要构建索引。</li>
+<li><strong>基于探索的方法</strong>是从数据图的一个节点出发，根据模式图的结构关系对数据图进行探索，一般不需要构建索引。</li>
+</ul>
+<p>分布式动态图匹配技术主要依托于分布式并行图处理框架实现，用来处理规模庞大且计算复杂度高的动态图数据。</p>
+<p>目前，主流的分布式并行图计算系统的类型包括3种，分别是<strong>中心节点模型</strong>(包括 Pregel<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>、Trinity<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>、Giraph<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup>、GraphLab<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup>等)、<strong>中心块模型</strong>(Blogel<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup>,<sup id="fnref:7"><a href="#fn:7" class="footnote-ref" role="doc-noteref">7</a></sup>)以及<strong>自动并行化模型</strong>(GRAPE<sup id="fnref:8"><a href="#fn:8" class="footnote-ref" role="doc-noteref">8</a></sup>)。其中,中心节点模型和中心块模型需要根据模型的特点来改造算法。这 3 种分布式并行图计算系统都遵循BSP模型。</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>结构变化</th>
+<th>内容变化</th>
+<th>精确算法</th>
+<th>近似算法</th>
+<th>同构匹配</th>
+<th>模拟匹配</th>
+<th>集中式匹配</th>
+<th>分布式匹配</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NNT(2009)<sup id="fnref:9"><a href="#fn:9" class="footnote-ref" role="doc-noteref">9</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>IncSimMatch(2011)<sup id="fnref:10"><a href="#fn:10" class="footnote-ref" role="doc-noteref">10</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>IncBMatch(2011)<sup id="fnref1:10"><a href="#fn:10" class="footnote-ref" role="doc-noteref">10</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>BR-Index(2011)<sup id="fnref:11"><a href="#fn:11" class="footnote-ref" role="doc-noteref">11</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Vertex-Replication(2012)</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>SJ-Tree(2013)<sup id="fnref:12"><a href="#fn:12" class="footnote-ref" role="doc-noteref">12</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>DeltaGraph(2013)<sup id="fnref:13"><a href="#fn:13" class="footnote-ref" role="doc-noteref">13</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>DDST(2013)<sup id="fnref:14"><a href="#fn:14" class="footnote-ref" role="doc-noteref">14</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Gradin(2014)<sup id="fnref:15"><a href="#fn:15" class="footnote-ref" role="doc-noteref">15</a></sup></td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>SSD(2014)<sup id="fnref:16"><a href="#fn:16" class="footnote-ref" role="doc-noteref">16</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Lary-Search(2014)<sup id="fnref:17"><a href="#fn:17" class="footnote-ref" role="doc-noteref">17</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>MultiView(2014)</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Distirbuted-IncSimMatch(2016)<sup id="fnref:18"><a href="#fn:18" class="footnote-ref" role="doc-noteref">18</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Graph-View(2016)</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr>
+<td>Stp(Q)(2016)<sup id="fnref:19"><a href="#fn:19" class="footnote-ref" role="doc-noteref">19</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>D-ISI(2016)<sup id="fnref:20"><a href="#fn:20" class="footnote-ref" role="doc-noteref">20</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>IncISO(2017)<sup id="fnref:21"><a href="#fn:21" class="footnote-ref" role="doc-noteref">21</a></sup></td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+</tbody>
+</table>
+<h2 id="2面向结构变化的动态图匹配技术">2.面向结构变化的动态图匹配技术</h2>
+<p>面向结构变化的动态图模式匹配技术在目前应用最为广泛，其所处理的图数据结构会随着时间发生变化。从算法设计的角度来说，可以将其分为基于快照处理的匹配技术和基于增量处理的匹配技术。</p>
+<p><strong>基于快照处理的匹配技术</strong>就是将每一个时间戳上更新的数据图看成一个静态图来进行匹配处理，通常适用于增加边数目比较多的情形，该情形下可以一次性完成所有增加边操作，并基于更新后的数据图快照进行匹配计算。</p>
+<p><strong>基于增量处理的匹配技术</strong>仅对数据图中更新的部分进行分析和匹配，避免对整体数据图进行重新匹配所带来的重复计算。动态图增量匹配算法在子图匹配的过程中可以采用<strong>基于连接的匹配技术</strong>、<strong>基于探索的匹配技术</strong>或<strong>基于图模拟匹配技术</strong>实现。</p>
+<ul>
+<li>结构变化
+<ul>
+<li>快照匹配
+<ul>
+<li>NNT(2009)</li>
+<li>BR-Index(2011)</li>
+<li>DeltaGraph(2013)</li>
+<li>DDST(2013)</li>
+</ul>
+</li>
+<li>增量匹配
+<ul>
+<li>基于连接
+<ul>
+<li>SJ-Tree(2013)</li>
+<li>Lary-Search(2014)</li>
+<li>IncISO(2017)</li>
+</ul>
+</li>
+<li>基于探索
+<ul>
+<li>SSD(2014)</li>
+<li>IncISO(2017)</li>
+</ul>
+</li>
+<li>模拟匹配
+<ul>
+<li>IncSimMatch(2011)</li>
+<li>IncBMatch(2011)</li>
+<li>Distirbuted-IncSimMatch(2016)</li>
+<li>D-ISI(2016)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="21-基于快照的匹配技术">2.1 基于快照的匹配技术</h3>
+<p>动态图匹配问题实际上也是大规模的静态图查找问题，可以将每一时刻更新后的数据图看成静态图，然后对这些连续的静态图进行模式匹配。这种基于快照的匹配技术包括两部分：<strong>更新操作</strong>和<strong>匹配操作</strong>。</p>
+<ul>
+<li>面向结构变化的动态图更新操作包括<strong>删除边操作</strong>和<strong>增加边操作</strong>。</li>
+<li>在匹配的过程中，如果采用<strong>子图同构</strong>的方式进行匹配计算，则时间复杂度很高。</li>
+</ul>
+<p>采用子图同构的方式进行子图匹配计算效率低、耗时高，因此可以采用近似匹配算法或者模拟匹配技术来设计基于快照的匹配技术。近似算法用少量假阳性的结果降低匹配时间，模拟匹配则直接采用二元关系匹配来代替子图同构匹配。模拟匹配主要适用于更加侧重于挖掘节点之间关系的应用，用户需针对不同的应用背景来选择合适的子图匹配算法。</p>
+<h3 id="22-基于增量处理的匹配技术">2.2 基于增量处理的匹配技术</h3>
+<p><strong>动态图模式匹配属于NP完全问题</strong>。在匹配的过程中，如果按照基于快照的重复查找策略，需要在每一次数据图更新后都对完整的数据图进行匹配，当更新操作数量较少时，造成大量冗余计算，无法满足动态图高效分析处理的潜在需求。因此在设计算法的时候可以采用<strong>增量处理技术</strong>，通过<strong>数据图局部匹配技术</strong>或者<strong>利用之前匹配的结果</strong>来减少冗余的匹配计算。</p>
+<p>与基于快照处理的匹配技术相同，数据图更新时对匹配结果的影响可基于<strong>增加边</strong>和<strong>删除边</strong>这两种情况。</p>
+<p>在子图匹配过程中，动态图模式匹配与静态图模式匹配相似，因此可根据静态图模式匹配的分类方法，按是否需要将模式图分解，可分为<strong>基于连接的匹配技术</strong>和<strong>基于探索的匹配技术</strong>。除此之外，在动态图子图匹配中，运用<strong>基于图模拟的匹配技术</strong>也得到了较好的实验结果。</p>
+<p><strong>2.2.1 基于连接的动态图数据匹配技术</strong></p>
+<p>将基于连接的方法运用于动态图匹配分析时，如何实现高效数据图特征提取，是核心挑战问题。</p>
+<p>基于连接的匹配技术采用<strong>子图同构</strong>的方式进行子图匹配计算，可以得到<strong>精确的匹配结果</strong>，但是代价高昂。虽然利用查询分解的方法可以控制待匹配子图的规模从而限制子图同构的代价，但是仍会产生很多无效的中间结果。如果再对数据图构建索引以降低无效中间结果的数目，也需要考虑索引的构建和维护代价。同时，如何在频繁更新的动态图数据中挖掘特征结构进行查询分解，仍是当前需要重点解决的问题。</p>
+<p><strong>2.2.2 基于探索的匹配技术</strong></p>
+<p>基于探索的动态图匹配技术更适合于<strong>在分布式并行图处理框架中实现</strong>。</p>
+<p><strong>基于探索的匹配技术更加适用于处理规模庞大的图</strong>，但是由于匹配的不一致性会产生不精确的匹配结果，因而该类方法适用于那些对结果准确率要求不严格的应用，例如社交网络分析等。如何将基于探索与基于连接这两种方法有效地结合，用以权衡子图匹配效率与子图匹配准确率这两个重要因素，是目前研究的热点问题之一。</p>
+<p><strong>2.2.3 基于模拟的匹配技术</strong></p>
+<p>基于连接的匹配技术可以产生精确的匹配结果但是连接操作代价较为昂贵,基于探索的匹配技术则会产生不精确的匹配结果，且这两种方法都采用<strong>NP 难的子图同构图匹配</strong>计算方式，限制了这两类技术在执行效率上的提升。</p>
+<p>因此，基于模拟的匹配技术成为当前动态图匹配技术研究领域的研究热点之一。基于模拟的匹配技术通常先根据节点的标签为模式图中的每个节点产生一个匹配候选集，然后根据模式图中节点前驱和后继的不同近似程度要求过滤掉不匹配的节点。</p>
+<p>模拟匹配的匹配效率高，不论是分布式环境还是集中式环境下都适用，具有其独特的优势，这种优势在处理动态图匹配中更加明显。其中，构建在以图模拟匹配基础的<strong>双向模拟匹配</strong>更能很好地权衡模拟匹配结果的有效性和及时性，同时获得与模式图结构一致性相对更高的匹配结果，从而有效弥补了基于连接的匹配技术和基于探索的匹配技术的缺陷。</p>
+<h2 id="3面向内容变化的动态图匹配技术">3.面向内容变化的动态图匹配技术</h2>
+<p>除了面向拓扑结构变化的动态图模式匹配技术之外，面向内容变化的动态图模式匹配技术也得到了广泛应用。例如：基于该技术，可以在频繁更新的数据中心网络中找到满足用户需求的服务器部署方案；可以在频繁变化的社交网络中帮助广告商找到互相联系紧密的人员团体以便于投放广告等。这些应用中，节点或者边的属性会随时间发生频繁变化。</p>
+<h2 id="4-动态图模式匹配算法的性能比较">4. 动态图模式匹配算法的性能比较</h2>
+<h3 id="41-面向拓扑结构变化的动态图匹配算法性能比较">4.1 面向拓扑结构变化的动态图匹配算法性能比较</h3>
+<p><strong>4.1.1 基于快照技术的匹配算法性能比较</strong></p>
+<p>算法的性能可以通过有效性和效率两方面进行评价。</p>
+<p>合成数据用图生成工具<sup id="fnref:22"><a href="#fn:22" class="footnote-ref" role="doc-noteref">22</a></sup>产生。</p>
+<p>为了满足实时性的需求，基于快照的匹配技术可以从两方面进行设计。</p>
+<ul>
+<li>若采用<strong>同构匹配</strong>，需要设计<strong>高效的索引结构</strong>，在数据图更新的过程中，不会产生过高的索引维护代价；同时，需要设计一个<strong>近似算法</strong>来提升算法的效率；</li>
+<li>若采用<strong>模拟匹配</strong>，可以在图模拟的基础上加上一些限制条件，更加符合实际应用的需求；同时，设计基于该<strong>模拟匹配二元关系</strong>的精确算法来提升算法的匹配效率。</li>
+</ul>
+<p>需要注意的是：同构匹配和模拟匹配的选择，需要根据具体的应用背景来决定。</p>
+<p><strong>4.1.2 基于增量技术的匹配算法性能比较</strong></p>
+<p>4.1.2.1 基于连接的匹配技术</p>
+<p>在进行增量匹配时，如果将整个模式图进行匹配效率很低，尤其对密集的数据图。因此，可以采用将<strong>模式图分解</strong>的方法，但是这种方法会产生很多无效的中间结果。同时，基于连接的匹配技术采用的是<strong>子图同构</strong>的核实方法，无效的中间结果会导致匹配效率降低。因此，可以选择<strong>特征结构</strong>进行查询分解，从而过滤无效的中间结果，加快匹配速率。</p>
+<p>4.1.2.2 基于探索的匹配技术</p>
+<p>仅仅使用基于探索的匹配方式性能很差。因此，可以将基于连接的方法与基于探索的方法相结合，采用基于连接方法的查询分解框架，在匹配的过程中采用基于探索的方法。如何有效地利用信息的传递方式对模式图分解，是这种方法的关键部分，好的分解方式可以使总的信息传递量减少，从而提高查询效率。同时，也需要设计高效的算法来提高结果的准确率。</p>
+<p>4.1.2.3 基于模拟的匹配技术</p>
+<p>基于增量技术的动态图模式匹配研究越来越广泛，一般从 3 个方面考虑算法的性能提升：</p>
+<ul>
+<li>设计增量算法，充分利用之前的匹配结果过滤掉无效的更新；</li>
+<li>设计高效的增量子图匹配算法，在新增加的边周围找到可能是匹配结果的候选集；</li>
+<li>设计一种剪枝策略，进一步在匹配的候选集中过滤掉无效的结果。</li>
+</ul>
+<p>针对不同的应用背景，也需要采取合适的方法。</p>
+<p>从准确率方面来说，<strong>基于连接的方法</strong>可以获得精确的匹配结果，适合处理对图的拓扑结构要求比较严格的应用。</p>
+<p>从效率方面来说，基于连接的匹配技术会产生大量的中间结果，效率很低。而<strong>基于探索的方法</strong>会提高匹配效率，但是准确率不高，因此可以采用两者相结合的匹配方式。</p>
+<p>特别地，针对那些对拓扑结构要求不是严格的应用，可以采用<strong>基于图模拟的匹配方式</strong>，而一些扩展的图模拟匹配则可以获得与模式图结果一致性更高的匹配结果，从而弥补基于连接与基于探索方法的不足。</p>
+<h3 id="42-面向内容变化的动态图匹配算法性能比较">4.2 面向内容变化的动态图匹配算法性能比较</h3>
+<p>基于内容变化的动态图匹配算法一般从查询时间、可扩展性方面对算法的性能进行比较。</p>
+<p>目前面向内容变化的动态图模式匹配研究相对较少，主要用于数据中心方面。一般从两方面进行考虑：</p>
+<p>第一，对于属性更新不是很频繁的应用可以采用<strong>基于连接的匹配技术</strong>，类似于静态图匹配；</p>
+<p>第二，对于属性频繁更新的应用，如果采用基于连接的匹配方式则会不断产生大量的中间结果，因此可以采用<strong>基于探索的匹配方式</strong>。</p>
+<h2 id="5-动态图匹配技术的应用分析">5. 动态图匹配技术的应用分析</h2>
+<h3 id="犯罪行为分析">犯罪行为分析</h3>
+<p>目前，毒品交易、恐怖袭击事件等犯罪行为给国家造成了严重的危害。可建立以人物为节点、活动关系为边的行为关系图作为数据图，同时定义犯罪团体行为关系图作为模式图，从而利用模式图和动态数据图之间的模式匹配技术发现和预测潜在的犯罪团伙。</p>
+<h3 id="路网监测">路网监测</h3>
+<p>城市的道路交通监测是动态图模式匹配技术的重要应用。城市路网可以表示为图的形式，其中，节点表示路口，边表示路段。同时，用户可以根据交通事故发生后周围的典型路况定义模式图，将该模式图与动态变化的路 网数据图进行匹配，以完成对交通事故的实时监测。</p>
+<h3 id="网络安全监测">网络安全监测</h3>
+<p>基于动态图模式匹配技术将网络攻击行为模式图和动态变化的网络图进行模式匹配，可及时发现网络中的网络攻击事件或潜在网络攻击事件，达到对网络攻击行为进行检测甚至预测的效果。</p>
+<h3 id="计算生物学数据分析">计算生物学数据分析</h3>
+<p>生物学中研究的分子结构数据可以表示为图的形式。在蛋白质交互作用网络(protein-interaction network)中，蛋白质可能会与某种酶发生反应导致变异。通过将已知性质的蛋白质网络和动态变化的蛋白质交互作用网络进行匹配，可以从蛋白质交互作用网络中快速地找到发生变异的蛋白质结构，为研究生物组织的结构及功能提供重要依据。</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>Sun Z, Wang H, Wang H, Shao B, Li J. <strong>Efficient subgraph matching on billion node graphs</strong>. Proc. of the VLDB Endowment, 2012, 5(9):788−799. [doi: 10.14778/2311906.2311907]&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p>Malewicz G, Austern MH, Bik AJC, Dehnert JC, Horn I, Leiser N. Pregel: A system for large-scale graph processing. In: Proc. of the 2010 ACM SIGMOD Int’l Conf. on Management of Data. Indianapolis: ACM Press, 2010,18(18):135−146. [doi: 10.1145/ 1807167.1807184]&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p>Shao B, Wang H, Li Y. Trinity: A distributed graph engine on a memory cloud. In: Proc. of the 2013 ACM SIGMOD Int’l Conf. on Management of Data. NewYork: ACM Press, 2013. 505−516. [doi: 10.1145/2463676.2467799]&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4">
+<p>Apache Giraph. 2017. <a href="http://incubator.apache.org/giraph">http://incubator.apache.org/giraph</a>&#160;<a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5">
+<p>Low Y, Gonzalez JE, Kyrola A, Bickson D, Guestrin C, Hellerstein J. GraphLab: A new framework for parallel machine learning. <a href="https://www.mendeley.com/research-papers/graphlab-new-parallel-framework-machine-learning/">https://www.mendeley.com/research-papers/graphlab-new-parallel-framework-machine-learning/</a>&#160;<a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:6">
+<p>Yan D, Cheng J, Lu Y, Ng W. Blogel: A block-centric framework for distributed computation on real-world graphs. Proc. of the VLDB Endowment, 2014,7(14):1981−1992. [doi: 10.14778/2733085.2733103]&#160;<a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:7">
+<p>Aridhi S, Montresor A, Velegrakis Y. BLADYG: A graph processing framework for large dynamic graphs. Big Data Reaearch. 2017. [doi: 10.1016/j.bdr.2017.05.003]&#160;<a href="#fnref:7" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:8">
+<p>Fan WF, Xu JB, Wu YH, Yu WY, Jiang JX, Zheng ZY, Zhang B, Cao Y, Tian C. Parallelizing sequential graph computations. In: Proc. of the 2017 ACM SIGMOD Int’l Conf. on Management of Data. Chicago: ACM Press, 2017. 495−510. [doi: 10.1145/ 3035918. 3035942]&#160;<a href="#fnref:8" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:9">
+<p>Wang C, Chen L. Continuous subgraph pattern search over graph streams. In: Proc. of the 25th Int’l Conf. on Data Engineering. Shanghai: IEEE Computer Society, 2009. 393−404. [doi: 10.1109/ICDE.2009.132]&#160;<a href="#fnref:9" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:10">
+<p>Fan WF, Li JZ, Luo JZ, Tan ZJ, Wang X, Wu YH. Incremental graph pattern matching. In: Proc. of the 2011 ACM SIGMOD Int’l Conf. on Management of Data. Athens: ACM Press, 2011,38(3):925−936. [doi: 10.1145/2489791]&#160;<a href="#fnref:10" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a>&#160;<a href="#fnref1:10" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:11">
+<p>Yang J, Jin W. BR-Index: An indexing structure for subgraph matching in very large dynamic graphs. In: Proc. of the Scientific and Statistical Database Management. 2011. 322−331. [doi: 10.1007/978-3-642-22351-8_20]&#160;<a href="#fnref:11" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:12">
+<p>Choudhury S, Holder L, Chin G, Feo J,. In: Proc. of the Workshop on Dynamic Networks Management and Mining. NewYork: ACM Press, 2013. 1−8. [doi: 10.1145/2489247.2489251]&#160;<a href="#fnref:12" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:13">
+<p>Khurana U, Deshpande A. Efficient snapshot retrieval over historical graph data. In: Proc. of the 29th Int’l Conf. on Data Engineering. Brisbane: IEEE Computer Society, 2013. 997−1008. [doi: 10.1109/ICDE.2013.6544892]&#160;<a href="#fnref:13" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:14">
+<p>Song C, Ge T, Chen C, Wang J. Event pattern matching over graph streams. Proc. of the VLDB Endowment, 2014,8(4):413−424. [doi: 10.14778/2735496.2735504]&#160;<a href="#fnref:14" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:15">
+<p>Zong B, Raghavendra R, Srivatsa M, Yan X, Singh AK, Lee KW. Cloud service placement via subgraph matching. In: Proc. of the 30th Int’l Conf. on Data Engineering. Chicago: IEEE Computer Society, 2014. 832−843. [doi: 10.1109/ICDE.2014.6816704]&#160;<a href="#fnref:15" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:16">
+<p>Gao J, Zhou C, Zhou J, Yu JX. Continuous pattern detection over billion-edge graph using distributed framework. In: Proc. of the 30th Int’l Conf. on Data Engineering. Chicago: IEEE Computer Society, 2014. 556−567. [doi: 10.1109/ICDE.2014.6816681]&#160;<a href="#fnref:16" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:17">
+<p>Choudhury S, Holder L, Chin G, Mackey P, Agarwal K, Feo J. Query optimization for dynamic graphs. Corrsionence &amp; Technology Protection, 2014.&#160;<a href="#fnref:17" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:18">
+<p>Kao JS, Chou J. Distributed incremental pattern matching on streaming graphs. In: Proc. of the ACM Workshop on High Performance Graph Processing. Kyoto: ACM Press, 2016. 43−50.&#160;<a href="#fnref:18" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:19">
+<p>Gao J, Zhou C, Yu JX. Toward continuous pattern detection over evolving large graph with snapshot isolation. The VLDB Journal, 2016,25(2):269−290. [doi: 10.1007/s00778-015-0416-z]&#160;<a href="#fnref:19" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:20">
+<p>Wickramaarachchi C, Kannan R, Chelmis C, Prasanna VK. Distributed exact subgraph matching in small diameter dynamic graphs. In: Proc. of the IEEE Int’l Conf. on Big Data. Washington: IEEE Computer Society, 2017. 3360−3369. [doi: 10.1109/BigData.2016. 7840996]&#160;<a href="#fnref:20" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:21">
+<p>Fan WF, Hu C, Tian C. Incremental graph computations: Doable and undoable. In: Proc. of the 2017 ACM SIGMOD Int’l Conf. on Management of Data. Chicago: ACM Press, 2017. 155−169. [doi: 10.1145/3035918.3035944]&#160;<a href="#fnref:21" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:22">
+<p>Kuramochi M, Karypis G. Frequent subgraph discovery. In: Proc. of the IEEE Int’l Conf. on Data Mining. San Jose: IEEE Computer Society, 2001. 313−320. [doi: 10.1109/ICDM.2001.989534]&#160;<a href="#fnref:22" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+</section>
+
+  
+  
+  <footer class="mt-12 flex flex-wrap">
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/graph-pattern-matching"
+      >Graph Pattern Matching</a
+    >
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/subgraph-isomorphism"
+      >subgraph isomorphism</a
+    >
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/%E7%BB%BC%E8%BF%B0"
+      >综述</a
+    >
+    
+  </footer>
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end p-6 pl-3 no-underline"
+      href="https://axtonsun.github.io/posts/graphpatternmatching2015/"
+      ><span>大规模图数据匹配技术综述</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60">
+  <div class="mr-auto">
+    &copy; 2022
+    <a class="link" href="https://axtonsun.github.io">Axton</a>
+  </div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank">Powered by Hugo️️</a
+  >️
+  <a class="link" href="https://github.com/nanxiaobei/hugo-paper" rel="noopener" target="_blank"
+    >▷ Paper 6</a
+  >
+</footer>
+
+  </body>
+</html>

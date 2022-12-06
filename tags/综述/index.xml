@@ -7,7 +7,24 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <copyright>Copyright © 2022–2022, Axton; all rights reserved.</copyright>
-    <lastBuildDate>Mon, 05 Dec 2022 23:04:15 +0800</lastBuildDate><atom:link href="https://axtonsun.github.io/tags/%E7%BB%BC%E8%BF%B0/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 06 Dec 2022 16:22:39 +0800</lastBuildDate><atom:link href="https://axtonsun.github.io/tags/%E7%BB%BC%E8%BF%B0/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>动态图模式匹配技术综述</title>
+      <link>https://axtonsun.github.io/posts/dynamicgraphpatternmatching2018/</link>
+      <pubDate>Tue, 06 Dec 2022 16:22:39 +0800</pubDate>
+      
+      <guid>https://axtonsun.github.io/posts/dynamicgraphpatternmatching2018/</guid>
+      <description>图(graph)作为一种广泛使用的数据结构，非常适合刻画这种存在内在关联性的数据，图中的每个节点代表现实世界中的实体对象，节点之间的边表示实体之间的关系。
+动态图模式匹配技术(dynamic graph pattern matching techniques)是分析动态图数据上高效查询的重要手段，广泛应用于众多重要领域。
+动态图模式匹配技术是指在一个实时更新的图中找到与给定模式图相匹配的子图，这里的匹配是指结构相同以及满足特定的语义关系等。
+现有动态图数据匹配相关研究工作主要从以下几个方面展开：
+针对动态图数据频繁更新的特性，研究增量处理技术，仅对动态图数据更新的部分进行分析和匹配； 针对动态图数据规模大的特性，研究如何利用分布式并行图处理框架，来加速动态图的匹配计算； 针对动态图分析实时性要求高的特性，除了综合运用增量处理技术和分布式并行图处理框架降低匹配处理时延之外，还有学者研究图匹配的近似计算技术，在求解时延和匹配结果假阳性错误率之间做权衡。 1. 动态图匹配问题的定义和分类 1.1 基本动态图匹配问题 通常用三元组\((V,E,L)\)对图数据进行形式化描述，其中\(V\)表示图中节点的集合，\(E\)表示图中边的集合，对于任意一条边\(e\in E\)，由节点\((v_i,v_j)\)构成，其中\(v_i,v_j\in V\)。图中的边和节点可以带有属性信息，\(L\)表示属性映射函数，将节点或边映射到一个或一组属性上。用符号 \(G,P,u,v\)分别表示数据图、模式图(或查询图)、单个数据图节点和单个模式图节点。 目前业界所使用的数据图\(G\)的类型可以分为两种：第一种数据图是超大图，第二种数据图是由大量的小图组成。 动态图又称图流(graph streams)，是指会随时间发生变化的图。
+动态图的更新形式可分为以下两类：
+图结构更新，随着时间推移，图数据中的节点和边会被插入和删除，从而导致图数据的结构发生变化； 图内容更新，随着时间推移，图数据中的节点和边所关联的数据对象的内容或属性会发生改变，从而导致图数据的内容发生变化。 1.1.1 图结构更新 定义1. 动态图
+已知初始数据图\(G\)，引发数据图更新的操作可以用三元组\(\left \langle op,u_i,u_j \right \rangle\) 表示。其中，\(op=\{I,D\}\)表示操作类型，\(op=I\)时表示增加边操作，\(op=D\)时表示删除边操作；\(u_i\)和\(u_j\)表示数据图中与操作\(op\)相关的两个图节点。若用更新操作集合 \(GC_t = \left \{ \left \langle op_1,u_1,u_2 \right \rangle,...,\left \langle op_k,u_k,u_{k+1} \right \rangle \right \}\left ( k\ge 1 \right )\)表示数据图\(G\)在\(t\)时刻的所有更新操作，用 \(GC:G→G&#39;\)表示数据图\(G\)基于更新操作集合\(GC\)更新后得到新数据图\(G&#39;\)的过程，则时间域\([0,T]\)上的动态图\(G_{D}^{[0,T]}\)是一个数据图序列，定义为 $$ G_{D}^{[0,T]}=\{ G_0,G_1,G_2,&amp;hellip;,G_T \} $$
+$$ G_0=G,GC_0=\phi,GC_t:G_{t-1}\to G_t\left ( 1 \le t \le T \right ) $$</description>
+    </item>
+    
     <item>
       <title>大规模图数据匹配技术综述</title>
       <link>https://axtonsun.github.io/posts/graphpatternmatching2015/</link>
