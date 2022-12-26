@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<html
+  class="not-ready text-sm lg:text-base"
+  style="--bg: #fff"
+  lang="en"
+>
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  
+  <title>图数据流的模型、算法和系统 - Axton</title>
+
+  
+  <meta name="theme-color" />
+  
+  <meta name="description" content="1.大规模流数据的机遇与挑战 图模型的点、边元素非常适用于建模复杂数据中的对象以及对象间的关联和交互，点和边上的属性、标签以及相关数据等的自由定义使得图模型能够很容易地以统一的形式表达不同的对象及其间的交互行为。
+图模型非常适合用来建模大规模复杂数据。图模型上的计算却很难应对图数据高速更新的场景。
+数据流中的元素往往具有统一简单的格式，并且元素之间相对独立，缺少对对象关联的建模。数据流模型的相关算法很难扩展到需要图模型建模的复杂数据上。
+人们急需一种既能够为复杂数据建模，又能够应对更新挑战的新的数据模型、技术来满足相应的信息管理需求。
+2.流计算系统 这些流系统和流计算库的核心思想都是针对流式的输入利用集群进行协作计算，而整体的数据依赖所形成的框架则为一个有向无环图，因此集群的整体协作更像是流水线的协作，计算框架中的数据依赖所形成的数据流动方向基本上是单一既定的。
+对于很多图计算而言，计算的逻辑并不是流水线式的流系统能容易处理 的 。图具有很强的表达能力，数据与数据之间的关联紧密，路径、连通分量等图计算使数据间的独立性比较低，单条边的变化可能对整个图的结构特征产生全局的影响。而且，图数据计算中的中间结果较多（如子图查询中的部分解），在分布式集群下的传输代价很高。因此，流式系统往往难以支撑大规模图数据流的计算。
+3.图数据流模型 3.1 图的流式计算 定义：给定一个静态的图，在一遍或多遍顺序地读取对应的图数据的过程中，获得预期数据信息或完成既定操作的计算问题。
+关注的重点主要是在空间有限无法载入整个大图时，如何多次遍历图数据完成相应图计算 流式计算涉及很多经典的图计算问题，包括多种图的属性特征计算和相关的图结构操作等 图流式访问的研究问题包含众多图计算的经典问题 三角形计算 Bar-YossefZ等人1结合relative近似和ratio-近似，提出了一个基于归约（reduction）的流式访问模型下的流算法，其中就以三角形计数流算法作为应用来分析，主要提到了两种流访问的形式： 一种是以边为项的邻接边流（adjacency流），边的前后顺序任意； 另一种是以点及其邻居的星状点流（incidence流），每个项是一个顶点及其邻居形成的星状结构。 其后的聚焦在相同问题的两个工作2 3基本沿着近似的思路以及adjacency流和incidence流的模型研究流式访问的三角形计数问题，并给出了更优的时间和空间上的相应算法的复杂度 可达性 UnelG等人4使用区间标记解决流式访问的图可达性问题。 首先在必要时对图进行可达性上等价的去环转化，转化过程是线性的。 其次，根据图的去环转化的过程将顶点从前到后打上时间标签，然后流式访问时就按这个时间标签从前到后进行，也就是说这个图数据流模型是设定了流的顺序进行访问的，因为目标在于对大图的可达性的计算，所以这种假设除了离线的时间开销外并没有实际限制。 这种情况下，去环的图可以转化为树，从而将图数据流上的可达性转化为树上的可达性问题，而显然后者是有高效算法的，而且树的空间效率相比图也有很大的提高。 最短路径 有向图流式访问上的最短路径问题最早是在DemetrescuC等人5的一个工作中提出的，是图数据流上空间复杂度和计算所需的遍历次数的权衡问题下的一个图算法的应用。 研究的结论是在给定比特的空间下，有向图的单源最短路径问题可以在\(O(n·logn)\)次遍历过程中解决。 有学者将这类图的流式计算称为图数据流6，但考虑到数据仍是已知的静态图，只是读取的方式是流式的，因此本文将这类能够多遍顺序读取图的计算模型称为图的流式计算模型。
+图的流式计算并不能满足当前大规模复杂数据流的计算需求 大规模复杂数据流很难进行多遍读取。图的流式计算中，全局的数据是给定的，而当前应用中实时产生的大量图结构数据则是无限增长的。 流式计算很难应对数据的过期更新操作。图的流式计算显然并不支持数据的删除更新。 以节约内存为初衷而出现的图的流式计算，尽管结合了图模型和类似于数据流模型的流式计算，但显然并不适用于大规模图结构数据流的场景。
+3.2 图数据流算法 已有的图数据流模型可以分为 3 种
+第一种是基于边流，即边的增删的图数据流。 SongCY等人7提出图数据流下的强仿真计算，对应的图数据流定义为一个包含顶点集、边集、标签集以及时间戳函数的有向图，其中流动的元素为按时间戳先后顺序排列的边，并且在边流上引入了时间窗的概念。 AngelA等人8最先研究了在实时更新的边流上维护密集子图的算法，其边流定义为一个无限序列，序列中的每个元素为给定边及其边权的变化值（增/减）。边本身没有时间戳的概念，但是边权更新的操作带有时间戳。 此外，FANWF等人9以及ChoudhuryS等人10各自的图数据流子图同构中的模型均属于第一种模型。 第二种是基于子图流，即数据流中的元素为一个个小的子图，边本身没有时间戳的概念，而流中的子图元素才有。 IBMWatson研究中心的AggarwalCC等人11利用Min-Hash的相似度衡量方法，将以子图流为形式的图数据流采样成一个静态的抽样集，进而把研究图数据流上的子图模式挖掘转换成了静态的抽样集的频繁模式挖掘的问题。 这个工作中的图数据流模型不支持删除操作，只考虑不断新增的小图，这些小图是作为整个图数据流对应的子图而定义的，彼此之间并不是独立的图。 第三种则是图数据流中，元素是定义在不同点或边集上的独立图数据。 ValariE等人12提出了一个给定动态的大图集合的模型，即大图的数量是一个固定的常数，每次集合都将按增加一个新大图、删除一个最旧的大图的方式更新，进而形成动态的大图集合，然后在大图集合上研究Topk的密集子图的计算算法。 值得注意的是，这个图数据流模型中，不同的大图是定义在不同的顶点集之上的，并不存在这些大图的公共超图的语义。 3.3 图数据流模型定义 数据流模型下的数据元素为图模型定义的元素，图数据中点的意义主要通过边来体现，孤立点在现实中的意义有限，给定一个图的边集就能明确地获得非孤立点的点集。
+图数据流：图数据流是一个无限地随时间不断变长的边序列，其中每条边在序列中都有一个对应的时间戳，序列中边的时间戳从前往后是非降序的。
+以无限边序列定义的图数据流更具一般性和统一性。
+现实应用高速生成数据的同时往往伴随已有数据的高速失效。例如利用社交网络数据进行广告投放时，过时数据的参考价值显然没有新近数据高，而大量的过时数据又会带来高的处理开销，因此，往往可以利用时间窗的概念来聚焦更有时效性的数据。时间窗主要分为两种：基于数据规模的时间窗13和基于时间跨度的时间窗14
+时间窗：给定一个图数据流，基于数据规模的时间窗定义为包含最近的给定N条数据边的边序列区间，时间窗内的数据则是最近的N条边；基于时间跨度的时间窗定义为以当前时间为结尾的一个给定时间段\((T_1,T_2)\)内的数据边所形成的边序列区间，而窗口内的边即为过去\(T_2\)-\(T_1\)时间内的所有数据边。 3.4 图数据流与动态图 动态图是指给定一个大图，在大图上出现数据增删的动态行为的模型。
+图数据流具有的时间信息更贴合现实世界的交互与联系，而动态图强调图结构随时间的变化，并不一定强调数据自身的时间信息。
+4.图数据流的研究前景：算法和系统 传统的图计算的问题在图数据流模型下仍然会有研究价值，包括三角形计算15 16、最短路径17 18、子图查询19、子图挖掘20以及图分类21、图聚类22等。
+4.1 问题的角度 图数据流的一个非常本质的特征就是边的时间信息。 图数据流的查询问题可以引入时序的限制。 例如，在子图查询中引入对边的时序限制7。 引入基于边的时间间隔限制等，以丰富图数据流相关查询的语义 利用图数据流的时间维度分析和挖掘数据的变化行为。 充满挑战但又有极大研究价值的图数据流上的行为预测，即根据已有的图数据流上的数据分布、行为变化，综合关联的结构信息，预测未来一段时间可能出现的图数据特征，包括分布、关联等。 例如，在交通网络上将交通站点建模成顶点，站点间的车流建模成边，这个模型下一个值得研究的问题就是如何根据过去几个小时的车流信息预测未来一个时间段内各条道路可能的车流密度。 在网络信息传输管道上，如何根据当前的网络状况预测接下来的网络流量拥堵情况，进而进行更合理的路由调度等，也是值得研究的问题。 4." />
+  <meta name="author" content="Axton" />
+  
+
+  
+  
+  
+  
+  
+  
+  <link rel="preload stylesheet" as="style" href="https://axtonsun.github.io/main.min.css" />
+
+  
+  <script
+    defer
+    src="https://axtonsun.github.io/highlight.min.js"
+    onload="hljs.initHighlightingOnLoad();"
+  ></script>
+  
+
+  
+  
+  
+  <link
+    rel="preload"
+    as="image"
+    href="https://axtonsun.github.io/theme.png"
+  />
+
+  
+  
+  
+  <link rel="preload" as="image" href="https://avatars.githubusercontent.com/u/15446174?s=400&amp;u=d3ade97b9363ffa8594afcb9ee947be2e47a7cb6&amp;v=4" />
+  
+  
+
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/twitter.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/github.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/instagram.svg" />
+  
+  <link rel="preload" as="image" href="https://axtonsun.github.io/rss.svg" />
+  
+
+  
+  <link rel="icon" href="https://axtonsun.github.io/images/favicon.ico" />
+  <link rel="apple-touch-icon" href="https://axtonsun.github.io/images/apple-touch-icon.png" />
+
+  
+  <meta name="generator" content="Hugo 0.101.0" />
+
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <meta property="og:title" content="图数据流的模型、算法和系统" />
+<meta property="og:description" content="1.大规模流数据的机遇与挑战 图模型的点、边元素非常适用于建模复杂数据中的对象以及对象间的关联和交互，点和边上的属性、标签以及相关数据等的自由定义使得图模型能够很容易地以统一的形式表达不同的对象及其间的交互行为。
+图模型非常适合用来建模大规模复杂数据。图模型上的计算却很难应对图数据高速更新的场景。
+数据流中的元素往往具有统一简单的格式，并且元素之间相对独立，缺少对对象关联的建模。数据流模型的相关算法很难扩展到需要图模型建模的复杂数据上。
+人们急需一种既能够为复杂数据建模，又能够应对更新挑战的新的数据模型、技术来满足相应的信息管理需求。
+2.流计算系统 这些流系统和流计算库的核心思想都是针对流式的输入利用集群进行协作计算，而整体的数据依赖所形成的框架则为一个有向无环图，因此集群的整体协作更像是流水线的协作，计算框架中的数据依赖所形成的数据流动方向基本上是单一既定的。
+对于很多图计算而言，计算的逻辑并不是流水线式的流系统能容易处理 的 。图具有很强的表达能力，数据与数据之间的关联紧密，路径、连通分量等图计算使数据间的独立性比较低，单条边的变化可能对整个图的结构特征产生全局的影响。而且，图数据计算中的中间结果较多（如子图查询中的部分解），在分布式集群下的传输代价很高。因此，流式系统往往难以支撑大规模图数据流的计算。
+3.图数据流模型 3.1 图的流式计算 定义：给定一个静态的图，在一遍或多遍顺序地读取对应的图数据的过程中，获得预期数据信息或完成既定操作的计算问题。
+关注的重点主要是在空间有限无法载入整个大图时，如何多次遍历图数据完成相应图计算 流式计算涉及很多经典的图计算问题，包括多种图的属性特征计算和相关的图结构操作等 图流式访问的研究问题包含众多图计算的经典问题 三角形计算 Bar-YossefZ等人1结合relative近似和ratio-近似，提出了一个基于归约（reduction）的流式访问模型下的流算法，其中就以三角形计数流算法作为应用来分析，主要提到了两种流访问的形式： 一种是以边为项的邻接边流（adjacency流），边的前后顺序任意； 另一种是以点及其邻居的星状点流（incidence流），每个项是一个顶点及其邻居形成的星状结构。 其后的聚焦在相同问题的两个工作2 3基本沿着近似的思路以及adjacency流和incidence流的模型研究流式访问的三角形计数问题，并给出了更优的时间和空间上的相应算法的复杂度 可达性 UnelG等人4使用区间标记解决流式访问的图可达性问题。 首先在必要时对图进行可达性上等价的去环转化，转化过程是线性的。 其次，根据图的去环转化的过程将顶点从前到后打上时间标签，然后流式访问时就按这个时间标签从前到后进行，也就是说这个图数据流模型是设定了流的顺序进行访问的，因为目标在于对大图的可达性的计算，所以这种假设除了离线的时间开销外并没有实际限制。 这种情况下，去环的图可以转化为树，从而将图数据流上的可达性转化为树上的可达性问题，而显然后者是有高效算法的，而且树的空间效率相比图也有很大的提高。 最短路径 有向图流式访问上的最短路径问题最早是在DemetrescuC等人5的一个工作中提出的，是图数据流上空间复杂度和计算所需的遍历次数的权衡问题下的一个图算法的应用。 研究的结论是在给定比特的空间下，有向图的单源最短路径问题可以在\(O(n·logn)\)次遍历过程中解决。 有学者将这类图的流式计算称为图数据流6，但考虑到数据仍是已知的静态图，只是读取的方式是流式的，因此本文将这类能够多遍顺序读取图的计算模型称为图的流式计算模型。
+图的流式计算并不能满足当前大规模复杂数据流的计算需求 大规模复杂数据流很难进行多遍读取。图的流式计算中，全局的数据是给定的，而当前应用中实时产生的大量图结构数据则是无限增长的。 流式计算很难应对数据的过期更新操作。图的流式计算显然并不支持数据的删除更新。 以节约内存为初衷而出现的图的流式计算，尽管结合了图模型和类似于数据流模型的流式计算，但显然并不适用于大规模图结构数据流的场景。
+3.2 图数据流算法 已有的图数据流模型可以分为 3 种
+第一种是基于边流，即边的增删的图数据流。 SongCY等人7提出图数据流下的强仿真计算，对应的图数据流定义为一个包含顶点集、边集、标签集以及时间戳函数的有向图，其中流动的元素为按时间戳先后顺序排列的边，并且在边流上引入了时间窗的概念。 AngelA等人8最先研究了在实时更新的边流上维护密集子图的算法，其边流定义为一个无限序列，序列中的每个元素为给定边及其边权的变化值（增/减）。边本身没有时间戳的概念，但是边权更新的操作带有时间戳。 此外，FANWF等人9以及ChoudhuryS等人10各自的图数据流子图同构中的模型均属于第一种模型。 第二种是基于子图流，即数据流中的元素为一个个小的子图，边本身没有时间戳的概念，而流中的子图元素才有。 IBMWatson研究中心的AggarwalCC等人11利用Min-Hash的相似度衡量方法，将以子图流为形式的图数据流采样成一个静态的抽样集，进而把研究图数据流上的子图模式挖掘转换成了静态的抽样集的频繁模式挖掘的问题。 这个工作中的图数据流模型不支持删除操作，只考虑不断新增的小图，这些小图是作为整个图数据流对应的子图而定义的，彼此之间并不是独立的图。 第三种则是图数据流中，元素是定义在不同点或边集上的独立图数据。 ValariE等人12提出了一个给定动态的大图集合的模型，即大图的数量是一个固定的常数，每次集合都将按增加一个新大图、删除一个最旧的大图的方式更新，进而形成动态的大图集合，然后在大图集合上研究Topk的密集子图的计算算法。 值得注意的是，这个图数据流模型中，不同的大图是定义在不同的顶点集之上的，并不存在这些大图的公共超图的语义。 3.3 图数据流模型定义 数据流模型下的数据元素为图模型定义的元素，图数据中点的意义主要通过边来体现，孤立点在现实中的意义有限，给定一个图的边集就能明确地获得非孤立点的点集。
+图数据流：图数据流是一个无限地随时间不断变长的边序列，其中每条边在序列中都有一个对应的时间戳，序列中边的时间戳从前往后是非降序的。
+以无限边序列定义的图数据流更具一般性和统一性。
+现实应用高速生成数据的同时往往伴随已有数据的高速失效。例如利用社交网络数据进行广告投放时，过时数据的参考价值显然没有新近数据高，而大量的过时数据又会带来高的处理开销，因此，往往可以利用时间窗的概念来聚焦更有时效性的数据。时间窗主要分为两种：基于数据规模的时间窗13和基于时间跨度的时间窗14
+时间窗：给定一个图数据流，基于数据规模的时间窗定义为包含最近的给定N条数据边的边序列区间，时间窗内的数据则是最近的N条边；基于时间跨度的时间窗定义为以当前时间为结尾的一个给定时间段\((T_1,T_2)\)内的数据边所形成的边序列区间，而窗口内的边即为过去\(T_2\)-\(T_1\)时间内的所有数据边。 3.4 图数据流与动态图 动态图是指给定一个大图，在大图上出现数据增删的动态行为的模型。
+图数据流具有的时间信息更贴合现实世界的交互与联系，而动态图强调图结构随时间的变化，并不一定强调数据自身的时间信息。
+4.图数据流的研究前景：算法和系统 传统的图计算的问题在图数据流模型下仍然会有研究价值，包括三角形计算15 16、最短路径17 18、子图查询19、子图挖掘20以及图分类21、图聚类22等。
+4.1 问题的角度 图数据流的一个非常本质的特征就是边的时间信息。 图数据流的查询问题可以引入时序的限制。 例如，在子图查询中引入对边的时序限制7。 引入基于边的时间间隔限制等，以丰富图数据流相关查询的语义 利用图数据流的时间维度分析和挖掘数据的变化行为。 充满挑战但又有极大研究价值的图数据流上的行为预测，即根据已有的图数据流上的数据分布、行为变化，综合关联的结构信息，预测未来一段时间可能出现的图数据特征，包括分布、关联等。 例如，在交通网络上将交通站点建模成顶点，站点间的车流建模成边，这个模型下一个值得研究的问题就是如何根据过去几个小时的车流信息预测未来一个时间段内各条道路可能的车流密度。 在网络信息传输管道上，如何根据当前的网络状况预测接下来的网络流量拥堵情况，进而进行更合理的路由调度等，也是值得研究的问题。 4." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://axtonsun.github.io/posts/graphstream2018/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-12-26T22:44:30+08:00" />
+<meta property="article:modified_time" content="2022-12-26T22:44:30+08:00" />
+
+
+  
+  <meta itemprop="name" content="图数据流的模型、算法和系统">
+<meta itemprop="description" content="1.大规模流数据的机遇与挑战 图模型的点、边元素非常适用于建模复杂数据中的对象以及对象间的关联和交互，点和边上的属性、标签以及相关数据等的自由定义使得图模型能够很容易地以统一的形式表达不同的对象及其间的交互行为。
+图模型非常适合用来建模大规模复杂数据。图模型上的计算却很难应对图数据高速更新的场景。
+数据流中的元素往往具有统一简单的格式，并且元素之间相对独立，缺少对对象关联的建模。数据流模型的相关算法很难扩展到需要图模型建模的复杂数据上。
+人们急需一种既能够为复杂数据建模，又能够应对更新挑战的新的数据模型、技术来满足相应的信息管理需求。
+2.流计算系统 这些流系统和流计算库的核心思想都是针对流式的输入利用集群进行协作计算，而整体的数据依赖所形成的框架则为一个有向无环图，因此集群的整体协作更像是流水线的协作，计算框架中的数据依赖所形成的数据流动方向基本上是单一既定的。
+对于很多图计算而言，计算的逻辑并不是流水线式的流系统能容易处理 的 。图具有很强的表达能力，数据与数据之间的关联紧密，路径、连通分量等图计算使数据间的独立性比较低，单条边的变化可能对整个图的结构特征产生全局的影响。而且，图数据计算中的中间结果较多（如子图查询中的部分解），在分布式集群下的传输代价很高。因此，流式系统往往难以支撑大规模图数据流的计算。
+3.图数据流模型 3.1 图的流式计算 定义：给定一个静态的图，在一遍或多遍顺序地读取对应的图数据的过程中，获得预期数据信息或完成既定操作的计算问题。
+关注的重点主要是在空间有限无法载入整个大图时，如何多次遍历图数据完成相应图计算 流式计算涉及很多经典的图计算问题，包括多种图的属性特征计算和相关的图结构操作等 图流式访问的研究问题包含众多图计算的经典问题 三角形计算 Bar-YossefZ等人1结合relative近似和ratio-近似，提出了一个基于归约（reduction）的流式访问模型下的流算法，其中就以三角形计数流算法作为应用来分析，主要提到了两种流访问的形式： 一种是以边为项的邻接边流（adjacency流），边的前后顺序任意； 另一种是以点及其邻居的星状点流（incidence流），每个项是一个顶点及其邻居形成的星状结构。 其后的聚焦在相同问题的两个工作2 3基本沿着近似的思路以及adjacency流和incidence流的模型研究流式访问的三角形计数问题，并给出了更优的时间和空间上的相应算法的复杂度 可达性 UnelG等人4使用区间标记解决流式访问的图可达性问题。 首先在必要时对图进行可达性上等价的去环转化，转化过程是线性的。 其次，根据图的去环转化的过程将顶点从前到后打上时间标签，然后流式访问时就按这个时间标签从前到后进行，也就是说这个图数据流模型是设定了流的顺序进行访问的，因为目标在于对大图的可达性的计算，所以这种假设除了离线的时间开销外并没有实际限制。 这种情况下，去环的图可以转化为树，从而将图数据流上的可达性转化为树上的可达性问题，而显然后者是有高效算法的，而且树的空间效率相比图也有很大的提高。 最短路径 有向图流式访问上的最短路径问题最早是在DemetrescuC等人5的一个工作中提出的，是图数据流上空间复杂度和计算所需的遍历次数的权衡问题下的一个图算法的应用。 研究的结论是在给定比特的空间下，有向图的单源最短路径问题可以在\(O(n·logn)\)次遍历过程中解决。 有学者将这类图的流式计算称为图数据流6，但考虑到数据仍是已知的静态图，只是读取的方式是流式的，因此本文将这类能够多遍顺序读取图的计算模型称为图的流式计算模型。
+图的流式计算并不能满足当前大规模复杂数据流的计算需求 大规模复杂数据流很难进行多遍读取。图的流式计算中，全局的数据是给定的，而当前应用中实时产生的大量图结构数据则是无限增长的。 流式计算很难应对数据的过期更新操作。图的流式计算显然并不支持数据的删除更新。 以节约内存为初衷而出现的图的流式计算，尽管结合了图模型和类似于数据流模型的流式计算，但显然并不适用于大规模图结构数据流的场景。
+3.2 图数据流算法 已有的图数据流模型可以分为 3 种
+第一种是基于边流，即边的增删的图数据流。 SongCY等人7提出图数据流下的强仿真计算，对应的图数据流定义为一个包含顶点集、边集、标签集以及时间戳函数的有向图，其中流动的元素为按时间戳先后顺序排列的边，并且在边流上引入了时间窗的概念。 AngelA等人8最先研究了在实时更新的边流上维护密集子图的算法，其边流定义为一个无限序列，序列中的每个元素为给定边及其边权的变化值（增/减）。边本身没有时间戳的概念，但是边权更新的操作带有时间戳。 此外，FANWF等人9以及ChoudhuryS等人10各自的图数据流子图同构中的模型均属于第一种模型。 第二种是基于子图流，即数据流中的元素为一个个小的子图，边本身没有时间戳的概念，而流中的子图元素才有。 IBMWatson研究中心的AggarwalCC等人11利用Min-Hash的相似度衡量方法，将以子图流为形式的图数据流采样成一个静态的抽样集，进而把研究图数据流上的子图模式挖掘转换成了静态的抽样集的频繁模式挖掘的问题。 这个工作中的图数据流模型不支持删除操作，只考虑不断新增的小图，这些小图是作为整个图数据流对应的子图而定义的，彼此之间并不是独立的图。 第三种则是图数据流中，元素是定义在不同点或边集上的独立图数据。 ValariE等人12提出了一个给定动态的大图集合的模型，即大图的数量是一个固定的常数，每次集合都将按增加一个新大图、删除一个最旧的大图的方式更新，进而形成动态的大图集合，然后在大图集合上研究Topk的密集子图的计算算法。 值得注意的是，这个图数据流模型中，不同的大图是定义在不同的顶点集之上的，并不存在这些大图的公共超图的语义。 3.3 图数据流模型定义 数据流模型下的数据元素为图模型定义的元素，图数据中点的意义主要通过边来体现，孤立点在现实中的意义有限，给定一个图的边集就能明确地获得非孤立点的点集。
+图数据流：图数据流是一个无限地随时间不断变长的边序列，其中每条边在序列中都有一个对应的时间戳，序列中边的时间戳从前往后是非降序的。
+以无限边序列定义的图数据流更具一般性和统一性。
+现实应用高速生成数据的同时往往伴随已有数据的高速失效。例如利用社交网络数据进行广告投放时，过时数据的参考价值显然没有新近数据高，而大量的过时数据又会带来高的处理开销，因此，往往可以利用时间窗的概念来聚焦更有时效性的数据。时间窗主要分为两种：基于数据规模的时间窗13和基于时间跨度的时间窗14
+时间窗：给定一个图数据流，基于数据规模的时间窗定义为包含最近的给定N条数据边的边序列区间，时间窗内的数据则是最近的N条边；基于时间跨度的时间窗定义为以当前时间为结尾的一个给定时间段\((T_1,T_2)\)内的数据边所形成的边序列区间，而窗口内的边即为过去\(T_2\)-\(T_1\)时间内的所有数据边。 3.4 图数据流与动态图 动态图是指给定一个大图，在大图上出现数据增删的动态行为的模型。
+图数据流具有的时间信息更贴合现实世界的交互与联系，而动态图强调图结构随时间的变化，并不一定强调数据自身的时间信息。
+4.图数据流的研究前景：算法和系统 传统的图计算的问题在图数据流模型下仍然会有研究价值，包括三角形计算15 16、最短路径17 18、子图查询19、子图挖掘20以及图分类21、图聚类22等。
+4.1 问题的角度 图数据流的一个非常本质的特征就是边的时间信息。 图数据流的查询问题可以引入时序的限制。 例如，在子图查询中引入对边的时序限制7。 引入基于边的时间间隔限制等，以丰富图数据流相关查询的语义 利用图数据流的时间维度分析和挖掘数据的变化行为。 充满挑战但又有极大研究价值的图数据流上的行为预测，即根据已有的图数据流上的数据分布、行为变化，综合关联的结构信息，预测未来一段时间可能出现的图数据特征，包括分布、关联等。 例如，在交通网络上将交通站点建模成顶点，站点间的车流建模成边，这个模型下一个值得研究的问题就是如何根据过去几个小时的车流信息预测未来一个时间段内各条道路可能的车流密度。 在网络信息传输管道上，如何根据当前的网络状况预测接下来的网络流量拥堵情况，进而进行更合理的路由调度等，也是值得研究的问题。 4."><meta itemprop="datePublished" content="2022-12-26T22:44:30+08:00" />
+<meta itemprop="dateModified" content="2022-12-26T22:44:30+08:00" />
+<meta itemprop="wordCount" content="663">
+<meta itemprop="keywords" content="Graph Stream,综述," />
+  
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="图数据流的模型、算法和系统"/>
+<meta name="twitter:description" content="1.大规模流数据的机遇与挑战 图模型的点、边元素非常适用于建模复杂数据中的对象以及对象间的关联和交互，点和边上的属性、标签以及相关数据等的自由定义使得图模型能够很容易地以统一的形式表达不同的对象及其间的交互行为。
+图模型非常适合用来建模大规模复杂数据。图模型上的计算却很难应对图数据高速更新的场景。
+数据流中的元素往往具有统一简单的格式，并且元素之间相对独立，缺少对对象关联的建模。数据流模型的相关算法很难扩展到需要图模型建模的复杂数据上。
+人们急需一种既能够为复杂数据建模，又能够应对更新挑战的新的数据模型、技术来满足相应的信息管理需求。
+2.流计算系统 这些流系统和流计算库的核心思想都是针对流式的输入利用集群进行协作计算，而整体的数据依赖所形成的框架则为一个有向无环图，因此集群的整体协作更像是流水线的协作，计算框架中的数据依赖所形成的数据流动方向基本上是单一既定的。
+对于很多图计算而言，计算的逻辑并不是流水线式的流系统能容易处理 的 。图具有很强的表达能力，数据与数据之间的关联紧密，路径、连通分量等图计算使数据间的独立性比较低，单条边的变化可能对整个图的结构特征产生全局的影响。而且，图数据计算中的中间结果较多（如子图查询中的部分解），在分布式集群下的传输代价很高。因此，流式系统往往难以支撑大规模图数据流的计算。
+3.图数据流模型 3.1 图的流式计算 定义：给定一个静态的图，在一遍或多遍顺序地读取对应的图数据的过程中，获得预期数据信息或完成既定操作的计算问题。
+关注的重点主要是在空间有限无法载入整个大图时，如何多次遍历图数据完成相应图计算 流式计算涉及很多经典的图计算问题，包括多种图的属性特征计算和相关的图结构操作等 图流式访问的研究问题包含众多图计算的经典问题 三角形计算 Bar-YossefZ等人1结合relative近似和ratio-近似，提出了一个基于归约（reduction）的流式访问模型下的流算法，其中就以三角形计数流算法作为应用来分析，主要提到了两种流访问的形式： 一种是以边为项的邻接边流（adjacency流），边的前后顺序任意； 另一种是以点及其邻居的星状点流（incidence流），每个项是一个顶点及其邻居形成的星状结构。 其后的聚焦在相同问题的两个工作2 3基本沿着近似的思路以及adjacency流和incidence流的模型研究流式访问的三角形计数问题，并给出了更优的时间和空间上的相应算法的复杂度 可达性 UnelG等人4使用区间标记解决流式访问的图可达性问题。 首先在必要时对图进行可达性上等价的去环转化，转化过程是线性的。 其次，根据图的去环转化的过程将顶点从前到后打上时间标签，然后流式访问时就按这个时间标签从前到后进行，也就是说这个图数据流模型是设定了流的顺序进行访问的，因为目标在于对大图的可达性的计算，所以这种假设除了离线的时间开销外并没有实际限制。 这种情况下，去环的图可以转化为树，从而将图数据流上的可达性转化为树上的可达性问题，而显然后者是有高效算法的，而且树的空间效率相比图也有很大的提高。 最短路径 有向图流式访问上的最短路径问题最早是在DemetrescuC等人5的一个工作中提出的，是图数据流上空间复杂度和计算所需的遍历次数的权衡问题下的一个图算法的应用。 研究的结论是在给定比特的空间下，有向图的单源最短路径问题可以在\(O(n·logn)\)次遍历过程中解决。 有学者将这类图的流式计算称为图数据流6，但考虑到数据仍是已知的静态图，只是读取的方式是流式的，因此本文将这类能够多遍顺序读取图的计算模型称为图的流式计算模型。
+图的流式计算并不能满足当前大规模复杂数据流的计算需求 大规模复杂数据流很难进行多遍读取。图的流式计算中，全局的数据是给定的，而当前应用中实时产生的大量图结构数据则是无限增长的。 流式计算很难应对数据的过期更新操作。图的流式计算显然并不支持数据的删除更新。 以节约内存为初衷而出现的图的流式计算，尽管结合了图模型和类似于数据流模型的流式计算，但显然并不适用于大规模图结构数据流的场景。
+3.2 图数据流算法 已有的图数据流模型可以分为 3 种
+第一种是基于边流，即边的增删的图数据流。 SongCY等人7提出图数据流下的强仿真计算，对应的图数据流定义为一个包含顶点集、边集、标签集以及时间戳函数的有向图，其中流动的元素为按时间戳先后顺序排列的边，并且在边流上引入了时间窗的概念。 AngelA等人8最先研究了在实时更新的边流上维护密集子图的算法，其边流定义为一个无限序列，序列中的每个元素为给定边及其边权的变化值（增/减）。边本身没有时间戳的概念，但是边权更新的操作带有时间戳。 此外，FANWF等人9以及ChoudhuryS等人10各自的图数据流子图同构中的模型均属于第一种模型。 第二种是基于子图流，即数据流中的元素为一个个小的子图，边本身没有时间戳的概念，而流中的子图元素才有。 IBMWatson研究中心的AggarwalCC等人11利用Min-Hash的相似度衡量方法，将以子图流为形式的图数据流采样成一个静态的抽样集，进而把研究图数据流上的子图模式挖掘转换成了静态的抽样集的频繁模式挖掘的问题。 这个工作中的图数据流模型不支持删除操作，只考虑不断新增的小图，这些小图是作为整个图数据流对应的子图而定义的，彼此之间并不是独立的图。 第三种则是图数据流中，元素是定义在不同点或边集上的独立图数据。 ValariE等人12提出了一个给定动态的大图集合的模型，即大图的数量是一个固定的常数，每次集合都将按增加一个新大图、删除一个最旧的大图的方式更新，进而形成动态的大图集合，然后在大图集合上研究Topk的密集子图的计算算法。 值得注意的是，这个图数据流模型中，不同的大图是定义在不同的顶点集之上的，并不存在这些大图的公共超图的语义。 3.3 图数据流模型定义 数据流模型下的数据元素为图模型定义的元素，图数据中点的意义主要通过边来体现，孤立点在现实中的意义有限，给定一个图的边集就能明确地获得非孤立点的点集。
+图数据流：图数据流是一个无限地随时间不断变长的边序列，其中每条边在序列中都有一个对应的时间戳，序列中边的时间戳从前往后是非降序的。
+以无限边序列定义的图数据流更具一般性和统一性。
+现实应用高速生成数据的同时往往伴随已有数据的高速失效。例如利用社交网络数据进行广告投放时，过时数据的参考价值显然没有新近数据高，而大量的过时数据又会带来高的处理开销，因此，往往可以利用时间窗的概念来聚焦更有时效性的数据。时间窗主要分为两种：基于数据规模的时间窗13和基于时间跨度的时间窗14
+时间窗：给定一个图数据流，基于数据规模的时间窗定义为包含最近的给定N条数据边的边序列区间，时间窗内的数据则是最近的N条边；基于时间跨度的时间窗定义为以当前时间为结尾的一个给定时间段\((T_1,T_2)\)内的数据边所形成的边序列区间，而窗口内的边即为过去\(T_2\)-\(T_1\)时间内的所有数据边。 3.4 图数据流与动态图 动态图是指给定一个大图，在大图上出现数据增删的动态行为的模型。
+图数据流具有的时间信息更贴合现实世界的交互与联系，而动态图强调图结构随时间的变化，并不一定强调数据自身的时间信息。
+4.图数据流的研究前景：算法和系统 传统的图计算的问题在图数据流模型下仍然会有研究价值，包括三角形计算15 16、最短路径17 18、子图查询19、子图挖掘20以及图分类21、图聚类22等。
+4.1 问题的角度 图数据流的一个非常本质的特征就是边的时间信息。 图数据流的查询问题可以引入时序的限制。 例如，在子图查询中引入对边的时序限制7。 引入基于边的时间间隔限制等，以丰富图数据流相关查询的语义 利用图数据流的时间维度分析和挖掘数据的变化行为。 充满挑战但又有极大研究价值的图数据流上的行为预测，即根据已有的图数据流上的数据分布、行为变化，综合关联的结构信息，预测未来一段时间可能出现的图数据特征，包括分布、关联等。 例如，在交通网络上将交通站点建模成顶点，站点间的车流建模成边，这个模型下一个值得研究的问题就是如何根据过去几个小时的车流信息预测未来一个时间段内各条道路可能的车流密度。 在网络信息传输管道上，如何根据当前的网络状况预测接下来的网络流量拥堵情况，进而进行更合理的路由调度等，也是值得研究的问题。 4."/>
+
+  
+  
+</head>
+
+  <body class="text-black duration-200 ease-out dark:text-white">
+    <header class="mx-auto flex h-[5rem] max-w-3xl px-8 lg:justify-center">
+  <div class="relative z-50 mr-auto flex items-center">
+    <a class="-translate-x-[1px] -translate-y-0.5 text-3xl font-bold" href="https://axtonsun.github.io"
+      >Axton</a
+    >
+    <a
+      class="btn-dark ml-6 h-6 w-6 shrink-0 cursor-pointer [background:url(./theme.png)_left_center/_auto_theme('spacing.6')_no-repeat] [transition:_background-position_0.4s_steps(5)] dark:[background-position:right]"
+    ></a>
+  </div>
+
+  <a
+    class="btn-menu relative z-50 -mr-8 flex h-[5rem] w-[5rem] shrink-0 cursor-pointer flex-col items-center justify-center gap-2.5 lg:hidden"
+  ></a>
+
+  
+  <script>
+    
+    const htmlClass = document.documentElement.classList;
+    setTimeout(() => {
+      htmlClass.remove('not-ready');
+    }, 10);
+
+    
+    const btnMenu = document.querySelector('.btn-menu');
+    btnMenu.addEventListener('click', () => {
+      htmlClass.toggle('open');
+    });
+
+    
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    const lightBg = `"#fff"`.replace(/"/g, '');
+    const setDark = (isDark) => {
+      metaTheme.setAttribute('content', isDark ? '#000' : lightBg);
+      htmlClass[isDark ? 'add' : 'remove']('dark');
+      localStorage.setItem('dark', isDark);
+    };
+
+    
+    const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+    const darkVal = localStorage.getItem('dark');
+    setDark(darkVal ? darkVal === 'true' : darkScheme.matches);
+
+    
+    darkScheme.addEventListener('change', (event) => {
+      setDark(event.matches);
+    });
+
+    
+    const btnDark = document.querySelector('.btn-dark');
+    btnDark.addEventListener('click', () => {
+      setDark(localStorage.getItem('dark') !== 'true');
+    });
+  </script>
+
+  <div
+    class="nav-wrapper fixed inset-x-0 top-full z-40 flex h-full select-none flex-col justify-center pb-16 duration-200 dark:bg-black lg:static lg:h-auto lg:flex-row lg:!bg-transparent lg:pb-0 lg:transition-none"
+  >
+    
+    
+    <nav class="lg:ml-12 lg:flex lg:flex-row lg:items-center lg:space-x-6">
+      
+      <a
+        class="block text-center text-2xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/about/"
+        >About</a
+      >
+      
+      <a
+        class="block text-center text-2xl leading-[5rem] lg:text-base lg:font-normal"
+        href="/contact/"
+        >Contact</a
+      >
+      
+    </nav>
+    
+
+    
+    <nav
+      class="mt-12 flex justify-center space-x-10 dark:invert lg:mt-0 lg:ml-12 lg:items-center lg:space-x-6"
+    >
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/twitter.svg)"
+        href=" https://twitter.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/github.svg)"
+        href=" https://github.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/instagram.svg)"
+        href=" https://instagram.com/axtonsun "
+        target="_blank"
+      ></a>
+      
+      <a
+        class="h-8 w-8 [background:var(--url)_center_center/cover_no-repeat] lg:h-6 lg:w-6"
+        style="--url: url(./images/rss.svg)"
+        href=" https://axtonsun.github.io/index.xml "
+        target="_blank"
+      ></a>
+      
+    </nav>
+    
+  </div>
+</header>
+
+
+    <main
+      class="prose prose-neutral relative mx-auto min-h-[calc(100%-10rem)] max-w-3xl px-8 pt-20 pb-32 dark:prose-invert"
+    >
+      
+
+<article>
+  <header class="mb-20">
+    <h1 class="!my-0 pb-2.5">图数据流的模型、算法和系统</h1>
+
+    
+    <div class="text-sm opacity-60">
+      
+      <time>Dec 26, 2022</time>
+      
+      
+      <span class="mx-1">&middot;</span>
+      <span>Axton</span>
+      
+    </div>
+    
+  </header>
+
+  <section><h2 id="1大规模流数据的机遇与挑战">1.大规模流数据的机遇与挑战</h2>
+<p>图模型的点、边元素非常适用于建模复杂数据中的对象以及对象间的关联和交互，点和边上的属性、标签以及相关数据等的自由定义使得图模型能够很容易地以统一的形式表达不同的对象及其间的交互行为。</p>
+<p>图模型非常适合用来<strong>建模大规模复杂数据</strong>。图模型上的计算却很难应对图数据高速更新的场景。</p>
+<p>数据流中的元素往往具有统一简单的格式，并且元素之间相对独立，缺少对对象关联的建模。数据流模型的<strong>相关算法很难扩展到需要图模型建模的复杂数据上</strong>。</p>
+<p>人们急需一种既能够为复杂数据建模，又能够应对更新挑战的新的数据模型、技术来满足相应的信息管理需求。</p>
+<h2 id="2流计算系统">2.流计算系统</h2>
+<p>这些流系统和流计算库的核心思想都是<strong>针对流式的输入利用集群进行协作计算</strong>，而整体的数据依赖所形成的框架则为一个<strong>有向无环图</strong>，因此集群的整体协作更像是流水线的协作，计算框架中的数据依赖所形成的数据流动方向基本上是单一既定的。</p>
+<p>对于很多图计算而言，计算的逻辑并不是流水线式的流系统能容易处理 的 。<strong>图具有很强的表达能力，数据与数据之间的关联紧密</strong>，路径、连通分量等图计算使数据间的独立性比较低，单条边的变化可能对整个图的结构特征产生全局的影响。而且，<strong>图数据计算中的中间结果较多</strong>（如子图查询中的部分解），在分布式集群下的传输代价很高。因此，流式系统往往<strong>难以支撑大规模图数据流的计算</strong>。</p>
+<h2 id="3图数据流模型">3.图数据流模型</h2>
+<h3 id="31-图的流式计算">3.1 图的流式计算</h3>
+
+
+<!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/contrib/auto-render.min.js" integrity="sha384-kWPLUVMOks5AQFrykwIup5lo0m3iMkkHrD0uJ4H5cjeGihAutqP0yW0J6dpFiVkI" crossorigin="anonymous" onload="renderMathInElement(document.body);"></script>
+
+
+
+<p>定义：给定一个<strong>静态的图</strong>，在<strong>一遍</strong>或<strong>多遍</strong>顺序地读取对应的图数据的过程中，获得预期数据信息或完成既定操作的计算问题。</p>
+<ul>
+<li>关注的重点主要是<strong>在空间有限无法载入整个大图时，如何多次遍历图数据完成相应图计算</strong></li>
+<li>流式计算涉及很多经典的图计算问题，包括多种<strong>图的属性特征计算</strong>和<strong>相关的图结构操作</strong>等</li>
+<li><strong>图流式访问的研究问题包含众多图计算的经典问题</strong>
+<ul>
+<li><strong>三角形计算</strong>
+<ul>
+<li>Bar-YossefZ等人<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>结合<strong>relative近似</strong>和<strong>ratio-近似</strong>，提出了一个<strong>基于归约（reduction）的流式访问模型下的流算法</strong>，其中就以<strong>三角形计数</strong>流算法作为应用来分析，主要提到了两种流访问的形式：
+<ul>
+<li>一种是以边为项的邻接边流（adjacency流），边的前后顺序任意；</li>
+<li>另一种是以点及其邻居的星状点流（incidence流），每个项是一个顶点及其邻居形成的星状结构。</li>
+<li>其后的聚焦在相同问题的两个工作<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup> <sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>基本沿着近似的思路以及adjacency流和incidence流的模型研究流式访问的三角形计数问题，并给出了更优的时间和空间上的相应算法的复杂度</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>可达性</strong>
+<ul>
+<li>UnelG等人<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup>使用<strong>区间标记</strong>解决流式访问的图可达性问题。
+<ul>
+<li>首先在必要时对图进行可达性上等价的去环转化，转化过程是线性的。</li>
+<li>其次，根据图的去环转化的过程将顶点从前到后打上时间标签，然后流式访问时就按这个时间标签从前到后进行，也就是说这个图数据流模型是设定了流的顺序进行访问的，因为目标在于对大图的可达性的计算，所以这种假设除了离线的时间开销外并没有实际限制。</li>
+<li>这种情况下，去环的图可以转化为树，从而将图数据流上的可达性转化为树上的可达性问题，而显然后者是有高效算法的，而且树的空间效率相比图也有很大的提高。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>最短路径</strong>
+<ul>
+<li>有向图流式访问上的<strong>最短路径</strong>问题最早是在DemetrescuC等人<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup>的一个工作中提出的，是图数据流上空间复杂度和计算所需的遍历次数的权衡问题下的一个图算法的应用。</li>
+<li>研究的结论是在给定比特的空间下，有向图的单源最短路径问题可以在\(O(n·logn)\)次遍历过程中解决。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>有学者将这类图的流式计算称为图数据流<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup>，但考虑到数据仍是<strong>已知的静态图</strong>，只是读取的方式是<strong>流式</strong>的，因此本文将这类<strong>能够多遍顺序读取图的计算模型</strong>称为<strong>图的流式计算模型</strong>。</p>
+<ul>
+<li>图的流式计算并不能满足当前大规模复杂数据流的计算需求
+<ul>
+<li>大规模复杂数据流很难进行多遍读取。图的流式计算中，全局的数据是给定的，而当前应用中实时产生的大量图结构数据则是无限增长的。</li>
+<li>流式计算很难应对数据的过期更新操作。图的流式计算显然并不支持数据的删除更新。</li>
+</ul>
+</li>
+</ul>
+<p>以节约内存为初衷而出现的图的流式计算，尽管结合了图模型和类似于数据流模型的流式计算，但显然并<strong>不适用于大规模图结构数据流的场景</strong>。</p>
+<h3 id="32-图数据流算法">3.2 图数据流算法</h3>
+<p>已有的图数据流模型可以分为 3 种</p>
+<ul>
+<li>第一种是基于<strong>边流</strong>，即<strong>边的增删的图数据流</strong>。
+<ul>
+<li>SongCY等人<sup id="fnref:7"><a href="#fn:7" class="footnote-ref" role="doc-noteref">7</a></sup>提出图数据流下的强仿真计算，对应的图数据流定义为一个包含顶点集、边集、标签集以及时间戳函数的有向图，其中流动的元素为按时间戳先后顺序排列的边，并且在边流上引入了时间窗的概念。</li>
+<li>AngelA等人<sup id="fnref:8"><a href="#fn:8" class="footnote-ref" role="doc-noteref">8</a></sup>最先研究了在实时更新的边流上维护密集子图的算法，其边流定义为一个无限序列，序列中的每个元素为给定边及其边权的变化值（增/减）。边本身没有时间戳的概念，但是边权更新的操作带有时间戳。</li>
+<li>此外，FANWF等人<sup id="fnref:9"><a href="#fn:9" class="footnote-ref" role="doc-noteref">9</a></sup>以及ChoudhuryS等人<sup id="fnref:10"><a href="#fn:10" class="footnote-ref" role="doc-noteref">10</a></sup>各自的图数据流子图同构中的模型均属于第一种模型。</li>
+</ul>
+</li>
+<li>第二种是基于<strong>子图流</strong>，即<strong>数据流中的元素为一个个小的子图，边本身没有时间戳的概念，而流中的子图元素才有</strong>。
+<ul>
+<li>IBMWatson研究中心的AggarwalCC等人<sup id="fnref:11"><a href="#fn:11" class="footnote-ref" role="doc-noteref">11</a></sup>利用Min-Hash的相似度衡量方法，将以子图流为形式的图数据流采样成一个静态的抽样集，进而把研究图数据流上的子图模式挖掘转换成了静态的抽样集的频繁模式挖掘的问题。</li>
+<li>这个工作中的图数据流模型不支持删除操作，只考虑不断新增的小图，这些小图是作为整个图数据流对应的子图而定义的，彼此之间并不是独立的图。</li>
+</ul>
+</li>
+<li>第三种则是<strong>图数据流中，元素是定义在不同点或边集上的独立图数据</strong>。
+<ul>
+<li>ValariE等人<sup id="fnref:12"><a href="#fn:12" class="footnote-ref" role="doc-noteref">12</a></sup>提出了一个给定动态的大图集合的模型，即大图的数量是一个固定的常数，每次集合都将按增加一个新大图、删除一个最旧的大图的方式更新，进而形成动态的大图集合，然后在大图集合上研究Topk的密集子图的计算算法。</li>
+<li>值得注意的是，这个图数据流模型中，不同的大图是定义在不同的顶点集之上的，并不存在这些大图的公共超图的语义。</li>
+</ul>
+</li>
+</ul>
+<h3 id="33-图数据流模型定义">3.3 图数据流模型定义</h3>
+<p><strong>数据流模型下的数据元素为图模型定义的元素</strong>，图数据中点的意义主要通过边来体现，孤立点在现实中的意义有限，给定一个图的边集就能明确地获得非孤立点的点集。</p>
+<p><strong>图数据流</strong>：图数据流是一个<strong>无限地随时间不断变长的边序列</strong>，其中每条边在序列中都有一个对应的<strong>时间戳</strong>，序列中边的时间戳从前往后是非降序的。</p>
+<p><strong>以无限边序列定义的图数据流更具一般性和统一性。</strong></p>
+<p>现实应用高速生成数据的同时往往伴随已有数据的高速失效。例如利用社交网络数据进行广告投放时，过时数据的参考价值显然没有新近数据高，而大量的过时数据又会带来高的处理开销，因此，往往可以利用时间窗的概念来聚焦更有时效性的数据。时间窗主要分为两种：<strong>基于数据规模的时间窗</strong><sup id="fnref:13"><a href="#fn:13" class="footnote-ref" role="doc-noteref">13</a></sup>和<strong>基于时间跨度的时间窗</strong><sup id="fnref:14"><a href="#fn:14" class="footnote-ref" role="doc-noteref">14</a></sup></p>
+<p><strong>时间窗</strong>：给定一个图数据流，<strong>基于数据规模的时间窗</strong>定义为包含最近的给定N条数据边的边序列区间，时间窗内的数据则是最近的N条边；<strong>基于时间跨度的时间窗</strong>定义为以当前时间为结尾的一个给定时间段\((T_1,T_2)\)内的数据边所形成的边序列区间，而窗口内的边即为过去\(T_2\)-\(T_1\)时间内的所有数据边。
+
+</p>
+<h3 id="34-图数据流与动态图">3.4 图数据流与动态图</h3>
+<p>动态图是指给定一个大图，在大图上出现数据增删的动态行为的模型。</p>
+<p><strong>图数据流</strong>具有的时间信息更贴合现实世界的交互与联系，而<strong>动态图</strong>强调图结构随时间的变化，并不一定强调数据自身的时间信息。</p>
+<h2 id="4图数据流的研究前景算法和系统">4.图数据流的研究前景：算法和系统</h2>
+<p>传统的图计算的问题在图数据流模型下仍然会有研究价值，包括三角形计算<sup id="fnref:15"><a href="#fn:15" class="footnote-ref" role="doc-noteref">15</a></sup> <sup id="fnref:16"><a href="#fn:16" class="footnote-ref" role="doc-noteref">16</a></sup>、最短路径<sup id="fnref:17"><a href="#fn:17" class="footnote-ref" role="doc-noteref">17</a></sup> <sup id="fnref:18"><a href="#fn:18" class="footnote-ref" role="doc-noteref">18</a></sup>、子图查询<sup id="fnref:19"><a href="#fn:19" class="footnote-ref" role="doc-noteref">19</a></sup>、子图挖掘<sup id="fnref:20"><a href="#fn:20" class="footnote-ref" role="doc-noteref">20</a></sup>以及图分类<sup id="fnref:21"><a href="#fn:21" class="footnote-ref" role="doc-noteref">21</a></sup>、图聚类<sup id="fnref:22"><a href="#fn:22" class="footnote-ref" role="doc-noteref">22</a></sup>等。</p>
+<h3 id="41-问题的角度">4.1 问题的角度</h3>
+<ul>
+<li>图数据流的一个非常本质的特征就是<strong>边的时间信息</strong>。
+<ul>
+<li>图数据流的查询问题可以引入<strong>时序的限制</strong>。
+<ul>
+<li>例如，在子图查询中引入对边的时序限制<sup id="fnref1:7"><a href="#fn:7" class="footnote-ref" role="doc-noteref">7</a></sup>。</li>
+</ul>
+</li>
+<li>引入<strong>基于边的时间间隔限制</strong>等，以丰富图数据流相关查询的语义</li>
+</ul>
+</li>
+<li>利用图数据流的<strong>时间维度分析</strong>和<strong>挖掘数据的变化行为</strong>。</li>
+<li>充满挑战但又有极大研究价值的图数据流上的行为预测，即<strong>根据已有的图数据流上的数据分布、行为变化，综合关联的结构信息，预测未来一段时间可能出现的图数据特征，包括分布、关联等。</strong>
+<ul>
+<li>例如，在交通网络上将交通站点建模成顶点，站点间的车流建模成边，这个模型下一个值得研究的问题就是如何根据过去几个小时的车流信息预测未来一个时间段内各条道路可能的车流密度。</li>
+<li>在网络信息传输管道上，如何根据当前的网络状况预测接下来的网络流量拥堵情况，进而进行更合理的路由调度等，也是值得研究的问题。</li>
+</ul>
+</li>
+</ul>
+<h3 id="42-方法的角度">4.2 方法的角度</h3>
+<p>核心挑战：<strong>加速计算带来的更新开销</strong></p>
+<ul>
+<li>以图数据流上的<strong>子图查询</strong>为例
+<ul>
+<li>如果通过构建复杂的索引来加速子图查询，那么在数据更新时必然需要更新相应的索引。如果不构建索引，则更新发生时，为了处理子图查询需要重新进行计算，而实际上一次更新往往涉及的只是局部的数据，完全重新计算将会有大量计算结果同上一个时间点的计算结果重叠，造成冗余计算。</li>
+<li>处理图数据流上的计算的关键是<strong>如何避免冗余计算</strong>，同时还能<strong>加速查询的响应</strong>。
+<ul>
+<li>需要考虑保存哪些已有的计算结果；</li>
+<li>在确定需要保存的计算结果上，要相应地保存组织的策略，即如何优化空间开销。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>图数据流计算的首要研究思路就是</strong>
+<ul>
+<li>加速计算的中间结果的选取与保留数据的组织形式；</li>
+<li>利用并行技术加速图数据流的更新与计算。</li>
+</ul>
+</li>
+</ul>
+<h3 id="43-图数据流管理系统">4.3 图数据流管理系统</h3>
+<p>图数据流管理系统的大致框架</p>
+<ul>
+<li>框架主要分为3层
+<ul>
+<li>图数据流的<strong>基本数据层</strong>
+<ul>
+<li>该层负责管理图数据流的最基本的边序列的存储、增删和基本的访问。其中访问操作包括图数据的一些基本操作，如访问节点度数、节点的邻居等。</li>
+</ul>
+</li>
+<li>算法和索引的<strong>逻辑层</strong>(包含核心算法和相应的索引数据的逻辑层)
+<ul>
+<li>其包含的索引数据能够根据数据层的增删而进行更新，从而保持与数据层的逻辑一致性。</li>
+<li>而核心算法则涉及图相关的基本算法，包括路径、子图等的经典计算以及图数据流下边的行为分析等。同时，还需要提供图数据流一般性的聚集查询与相关数据统计等逻辑接口。</li>
+</ul>
+</li>
+<li>向上支撑的各种应用的<strong>应用层</strong>
+<ul>
+<li>逻辑层之上则是需要支撑的应用层，针对现实应用数据的分析需求，定制更为复杂的计算接口。</li>
+<li>例如进行基于子图挖掘的事件侦测、城市交通的智能分析与管理和信息或话题的传播跟踪等。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="5结束语">5.结束语</h2>
+<ul>
+<li>图数据流是图模型和数据流模型相融合形成的数据模型
+<ul>
+<li>一方面<strong>具备图模型对复杂数据的强表达能力</strong></li>
+<li>另一方面<strong>又结合数据流的更新场景来建模复杂数据的高速生成行为</strong></li>
+</ul>
+</li>
+<li><strong>未来针对图数据流的研究工作有3个较为重要的路线：</strong>
+<ul>
+<li>一是<strong>基于已有的大量图算法/算子</strong>等，研究图数据流场景下相关计算操作的实现和优化；</li>
+<li>二是<strong>基于图数据流场景独自的特点和现实应用需求</strong>，提出新的图数据流研究问题及其解决方案；</li>
+<li>三是<strong>针对图数据流模型本身的数据管理系统</strong>，研究其存储、索引、数据的增删改查的基本操作、并发管理以及一致性保证等问题，进而设计结合现实需求的图数据流管理系统</li>
+</ul>
+</li>
+</ul>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>BAR-YOSSEFF Z, KUMART R, SIVAKUMAR D. <strong>Reductions in streaming algorithms, with an application to counting triangles in graphs</strong>[C]//The 13th Annual ACM-SIAM Symposium on Discrete Algorithms, January 6-8, 2002, San Francisco, USA. Philadelphia: Society for Industrial and Applied Mathematics, 2002: 623-632.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2">
+<p>J O WHARI H, GHODSI M. <strong>New streaming algorithms for counting triangles in graphs</strong>[C]//The 11th Annual International Conference, August 16-19, 2005, Kunming, China. [S.l.:s.n.], 2005: 710-716.&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3">
+<p>BURIOL L S, FRAHLING G, LEONARDI S, et al. <strong>Counting triangles in data streams</strong>[C]//The 25th ACM SIGMODSIGACT-SIGART Symposium on Principles of Database Systems, June 26-28, 2006, Chicago, USA. New York: ACM Press, 2006: 253-262&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4">
+<p>UNEL G, FISCHER F, BISHOP B. <strong>Answering reachability queries on streaming graphs</strong>[C]//The 1st International Workshop Stream Reasoning, May 31, 2009, Heraklion, Greece. [S.l.:s.n.], 2009.&#160;<a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5">
+<p>DEMETRESCU C, FINOCCHI I, RIBICHINI A. <strong>Trading off space for passes in graph streaming problems</strong>[J]. ACM Transactions on Algorithms, 2006, 6(1): 1-17.&#160;<a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:6">
+<p>MCGREGOR A. <strong>Graph stream algorithms: a survey</strong>[J]. ACM SIGMOD Record, 2014, 43(1): 9-20.&#160;<a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:7">
+<p>SONG C Y, GE T, CHEN C, et al. <strong>Event pattern matching over graph streams</strong>[J]. Proceedings of the VLDB Endowment, 2014, 8(4): 413-424.&#160;<a href="#fnref:7" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a>&#160;<a href="#fnref1:7" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:8">
+<p>ANGELA, KOUDAS N, SARKAS N, et al . <strong>Dense subgraph maintenance under streaming edge weight updates for realtime story identification</strong>[J]. VLDB Journal, 2014, 23(2): 175-199.&#160;<a href="#fnref:8" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:9">
+<p>FAN W F, WANG X, WU Y, et al. <strong>Incremental graph pattern matching</strong>[J]. ACM Transactions on Database Systems, 2013, 38(3): 925-936.&#160;<a href="#fnref:9" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:10">
+<p>CHOUDHURY S, HOLDER L, CHIN G, et al. <strong>A selectivity based approach to continuous pattern detection in streaming graphs</strong>[J]. Computer Science, 2015, 93(8): 939-945.&#160;<a href="#fnref:10" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:11">
+<p>AGGARWAL C C, LI Y, YU P S, et al. <strong>On dense pattern mining in graph streams</strong>[J]. Proceedings of the VLDB Endowment, 2010, 3(1-2): 975-984.&#160;<a href="#fnref:11" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:12">
+<p>VALARI E, KONTAKI M, PAPADOPOULOS A N. <strong>Discovery of top-k dense subgraphs in dynamic graph collections</strong>[C]//The 24th International Conference on Scientific and Statistical Database Management, June 25-27, 2012, Chania, Greece. Heidelberg: Springer, 2012: 213-230.&#160;<a href="#fnref:12" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:13">
+<p>CHI Y, WANG H, YU P S, et al. <strong>Moment: Maintaining closed frequent itemsets over a stream sliding window</strong>[C]//The 4th IEEE International Conference on Data Mining, November 1-4, 2004, Brighton, UK. Piscataway: IEEE Press, 2004: 59-66.&#160;<a href="#fnref:13" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:14">
+<p>SOLOMON M M. <strong>Algorithms for the vehicle routing and scheduling problems with time window constraints</strong>[J]. Operations Research, 1987, 35(2): 254-265.&#160;<a href="#fnref:14" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:15">
+<p>SCHANK T, WAGNER D. <strong>Finding, counting and listing all triangles in large graphs, an experimental study</strong>[C]// The 36th Annual ACM Symposium on Theory of Computing, June 13-16, 2004, Chicago, USA. Heidelberg: Springer, 2005: 606-609.&#160;<a href="#fnref:15" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:16">
+<p>KOLOUNTZAKIS M N, MILLER G L, PENG R, et al. <strong>Efficient triangle counting in large graphs via degree-based vertex partitioning</strong>[J]. Internet Mathematics, 2012, 8(1-2): 161-185.&#160;<a href="#fnref:16" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:17">
+<p>ZILIASKOPOULOS A K, MAHMASSANI H S. <strong>Time dependent, shortest-path algorithm for real-time intelligent vehicle highway system applications</strong>[J]. Transportation Research Record, 1993(1408): 94-100.&#160;<a href="#fnref:17" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:18">
+<p>CLIMACO J C N, MARTINS E Q V. <strong>A bicriterion shortest path algorithm</strong>[J]. European Journal of Operational Research, 1982, 11(4): 399-404.&#160;<a href="#fnref:18" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:19">
+<p>YUAN Y, WANG G, WANG H, et al. <strong>Efficient subgraph search over large uncertain graphs</strong>[J]. Proceedings of the VLDB Endowment, 2011, 4(11): 876-886.&#160;<a href="#fnref:19" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:20">
+<p>YAN X, HAN J. <strong>gSpan: graph-based substructure pattern mining</strong>[C]//The 2002 IEEE International Conference on Data Mining, December 9-12, 2002, Maebashi City, Japan. Piscataway: IEEE Press, 2002: 721-724.&#160;<a href="#fnref:20" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:21">
+<p>KASHIMA H, INOKUCHI A. <strong>Kernels for graph classification</strong>[C]// The 2002 IEEE International Conference on Data Mining, December 9-12, 2002, Maebashi City, Japan. Piscataway: IEEE Press, 2002.&#160;<a href="#fnref:21" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:22">
+<p>SCHAEFFER S E. <strong>Graph clustering</strong>[J]. Computer Science Review, 2007, 1(1): 27-64.&#160;<a href="#fnref:22" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+</section>
+
+  
+  
+  <footer class="mt-12 flex flex-wrap">
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/graph-stream"
+      >Graph Stream</a
+    >
+     
+    <a
+      class="mr-1.5 mb-1.5 rounded-lg bg-black/[3%] px-5 py-2 no-underline dark:bg-white/[8%]"
+      href="https://axtonsun.github.io/tags/%E7%BB%BC%E8%BF%B0"
+      >综述</a
+    >
+    
+  </footer>
+  
+
+  
+  
+  
+  <nav class="mt-24 flex rounded-lg bg-black/[3%] text-lg dark:bg-white/[8%]">
+    
+    
+    <a
+      class="ml-auto flex w-1/2 items-center justify-end p-6 pl-3 no-underline"
+      href="https://axtonsun.github.io/posts/dynamicgraphpatternmatching2018/"
+      ><span>动态图模式匹配技术综述</span><span class="ml-1.5">→</span></a
+    >
+    
+  </nav>
+  
+
+  
+  
+</article>
+
+
+    </main>
+
+    <footer class="opaco mx-auto flex h-[5rem] max-w-3xl items-center px-8 text-[0.9em] opacity-60">
+  <div class="mr-auto">
+    &copy; 2022
+    <a class="link" href="https://axtonsun.github.io">Axton</a>
+  </div>
+  <a class="link mx-6" href="https://gohugo.io/" rel="noopener" target="_blank">Powered by Hugo️️</a
+  >️
+  <a class="link" href="https://github.com/nanxiaobei/hugo-paper" rel="noopener" target="_blank"
+    >▷ Paper 6</a
+  >
+</footer>
+
+  </body>
+</html>
