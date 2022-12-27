@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Streaming Data on Axton</title>
+    <link>https://axtonsun.github.io/tags/streaming-data/</link>
+    <description>Recent content in Streaming Data on Axton</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>Copyright © 2022–2022, Axton; all rights reserved.</copyright>
+    <lastBuildDate>Tue, 27 Dec 2022 13:46:51 +0800</lastBuildDate><atom:link href="https://axtonsun.github.io/tags/streaming-data/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>软件学报&#39;04 流数据分析与管理综述</title>
+      <link>https://axtonsun.github.io/posts/stramingdatasurvey2004/</link>
+      <pubDate>Tue, 27 Dec 2022 13:46:51 +0800</pubDate>
+      
+      <guid>https://axtonsun.github.io/posts/stramingdatasurvey2004/</guid>
+      <description>摘要 流数据的特点是数据持续到达，且速度快、规模宏大；其研究核心是设计高效的单遍数据集扫描算法，在一个远小于数据规模的内存空间里不断更新一个代表数据集的结构——概要数据结构，使得在任何时候都能够根据这个结构迅速获得近似查询结果。
+引言 令 \(t\) 表示任一时间戳，\(a_t\) 表示在该时间戳到达的数据，流数据可以表示成\(\{...,a_{t−1},a_t,a_{t+1},...\}\)。 区别于传统应用模型，流数据模型具有以下 4 点共性：
+数据实时到达； 数据到达次序独立，不受应用系统所控制； 数据规模宏大且不能预知其最大值； 数据一经处理，除非特意保存，否则不能被再次取出处理，或者再次提取数据代价昂贵。 设计单遍扫描算法(one-pass algorithm)，实时地给出近似查询结果就成为数据流模型下数据处理的目标。
+算法的关键在于设计一个远小于数据集规模的结构，从而可以在内存中处理数据。相对于数据流的规模而言，这种名为概要数据结构(synopsis data structure)的规模至多应该是次线性的。即如果流的长度为 \(N\)，则概要数据结构大小不超过 \(O(polylog(N))\)，并且处理流上每一组数据的时间不超过 \(O(polylog(N))\)1
+新的流数据处理技术并不保存整个数据集，仅维护一个远小于其规模的概要数据结构，从而能够常驻内存。
+流数据处理技术往往包含两部分算法 一部分监控流中的数据，更新概要数据结构； 另一部分响应用户查询请求，返回近似查询结果。 最近几年，流数据处理技术发展很快。一方面，出现了很多流数据模型下的管理系统，即数据流管理系统 (data stream management system,简称 DSMS)，包括斯坦福大学的 STREAM 项目1、施乐公司的Tapestry 项目2、 加州大学伯克力分校的 Telegraph 项目3 4、布朗大学和麻省理工学院合作的Aurora 项目5等等,这些系统针对具体行业背景，给出较全面的数据管理解决方案；另一方面，基于流数据模型的数据挖掘技术也得到了广泛的研究，包括做聚类分析6、决策树分析7 8、密度估计9等等。上述数据流研究的核心就是概要数据结构的设计。
+数据流模型根据不同的时序范围可以划分成多种子模型，包括界标模型(landmark model)、滑动窗口模型 (sliding window model)和快照模型(snapshot model)。
+基于界标模型的方法 界标模型所要处理的数据范围从一个固定时间戳到当前时间戳。令初始时间戳为 \(s\)，当前时间戳为 \(n\)，则查询范围可以标记为\(\{a_s,...,a_n\}\) 创建基于界标模型的概要数据结构，要求这个结构能够近似模拟这个数据集合的特征。
+直方图(Histogram) 直方图技术10 11就是将一个大数据集划分为很多个连续的桶(bucket)，也就是小数据集，每个桶都由一个数字来代表其特征。直方图表示法直观、简洁，能够很好地表示大数据集的轮廓，因此在一些商业数据库中采用。
+1. 等宽直方图(Equi-width histogram)
+等宽直方图的目标是使各个桶的高度(即桶所含的数据量)比较平均。
+维护等宽直方图能够获得数据集的分位点12。
+2. 压缩直方图(Compressed histogram)
+压缩直方图可以看成是等宽直方图的一个扩充。
+在等宽直方图中，各桶所包含的数据量比较接近。如果数据分布比较均匀，等宽直方图能够较好地模拟数据集。但是，一旦数据集中存在某些所占比例特别大的元素(这些元素也被称为热门元素)，等宽直方图表示法就会产生较大的误差。
+压缩直方图法单独为那些热门元素创建桶，对其他元素仍然采用维护等宽直方图的方法，因而能够更真实地模拟数据集。
+3. V-优化直方图(V-optimal histogram)</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -9,7 +9,7 @@
     <copyright>Copyright © 2022–2022, Axton; all rights reserved.</copyright>
     <lastBuildDate>Tue, 06 Dec 2022 16:22:39 +0800</lastBuildDate><atom:link href="https://axtonsun.github.io/tags/subgraph-isomorphism/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>动态图模式匹配技术综述</title>
+      <title>软件学报&#39;18 动态图模式匹配技术综述</title>
       <link>https://axtonsun.github.io/posts/dynamicgraphpatternmatching2018/</link>
       <pubDate>Tue, 06 Dec 2022 16:22:39 +0800</pubDate>
       
@@ -26,7 +26,7 @@ $$ G_0=G,GC_0=\phi,GC_t:G_{t-1}\to G_t\left ( 1 \le t \le T \right ) $$</descrip
     </item>
     
     <item>
-      <title>大规模图数据匹配技术综述</title>
+      <title>计算机研究与发展&#39;15 大规模图数据匹配技术综述</title>
       <link>https://axtonsun.github.io/posts/graphpatternmatching2015/</link>
       <pubDate>Mon, 05 Dec 2022 23:04:15 +0800</pubDate>
       
